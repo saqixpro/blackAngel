@@ -14,7 +14,10 @@ const Welcome = (props) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.mainApp}>
         <View style={[styles.centerAlign, { height: height / 1.15 }]}>
-          <Image source={require("../assets/test.png")} style={styles.image} />
+          <Image
+            source={require("../assets/images/test.png")}
+            style={styles.image}
+          />
           <TouchableOpacity onPress={handlePress} style={styles.button}>
             <Text style={styles.buttonText}>Enter</Text>
           </TouchableOpacity>
