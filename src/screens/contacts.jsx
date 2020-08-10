@@ -8,11 +8,15 @@ import {
   StyleSheet,
   Alert
 } from "react-native";
-import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
+import {
+  FlatList,
+  TouchableOpacity,
+  TextInput
+} from "react-native-gesture-handler";
 import { colors } from "../constants/theme";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
-import { Entypo } from "@expo/vector-icons";
+import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 import * as SMS from "expo-sms";
 
@@ -21,25 +25,29 @@ const { width, height } = Dimensions.get("screen");
 const Contact = ({ id, name, phoneNumber, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.contactCard}>
-      <Text
-        style={{
-          color: colors.whiteText,
-          paddingVertical: 5,
-          fontWeight: "600",
-          fontSize: 16
-        }}
-      >
-        {name}
-      </Text>
-      <Text
-        style={{
-          color: colors.placeholderColor,
-          paddingVertical: 5,
-          fontSize: 13
-        }}
-      >
-        {phoneNumber ? phoneNumber : "No Phone Number Available"}
-      </Text>
+      <View style={{ flex: 0.5, alignItems: "flex-start" }}>
+        <Text
+          style={{
+            color: colors.whiteText,
+            paddingVertical: 5,
+            fontWeight: "600",
+            fontSize: 16
+          }}
+        >
+          {"   " + name}
+        </Text>
+      </View>
+      <View style={{ flex: 0.5, alignItems: "center" }}>
+        <Text
+          style={{
+            color: colors.placeholderColor,
+            paddingVertical: 5,
+            fontSize: 13
+          }}
+        >
+          {phoneNumber ? phoneNumber : "No Phone Number Available"}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -48,7 +56,8 @@ class Contacts extends Component {
   state = {
     contacts: null,
     loading: false,
-    canSendSMS: false
+    canSendSMS: false,
+    searchFilter: null
   };
 
   async componentDidMount() {
@@ -79,7 +88,17 @@ class Contacts extends Component {
     this.setState({ loading: false });
     if (user.docs.length > 0) alert(`user exists`);
     else if (this.state.canSendSMS)
-      this.sendSMSAsync(phone, `Auto Generated Message!`);
+      await this.sendSMSAsync(phone, `Auto Generated Message!`);
+  };
+
+  handleSearch = (text) => {
+    const { contacts } = this.props;
+
+    const findContacts = contacts.filter((contact) =>
+      contact.name.includes(text)
+    );
+
+    this.setState({ contacts: findContacts });
   };
 
   render() {
@@ -104,6 +123,23 @@ class Contacts extends Component {
             </View>
           </View>
           {this.state.loading ? <Loading /> : <View />}
+          <View style={styles.searchInput}>
+            <View style={{ flex: 0.1 }}>
+              <FontAwesome
+                style={{ padding: 10, color: colors.placeholderColor }}
+                name="search"
+                size={18}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextInput
+                onChangeText={(text) => this.handleSearch(text)}
+                placeholderTextColor={colors.placeholderColor}
+                placeholder="Search"
+                style={styles.input}
+              />
+            </View>
+          </View>
           <FlatList
             data={this.state.contacts}
             renderItem={({ item }) => (
@@ -128,7 +164,8 @@ const styles = StyleSheet.create({
   },
   contactCard: {
     backgroundColor: colors.secondaryBackground,
-    marginVertical: 20,
+    flexDirection: "row",
+    marginVertical: 15,
     width: width / 1.1,
     padding: 10,
     borderRadius: 8,
@@ -144,6 +181,20 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 25,
     fontWeight: "bold"
+  },
+  searchInput: {
+    backgroundColor: colors.secondaryBackground,
+    width: width / 1.1,
+    padding: 5,
+    flexDirection: "row",
+    alignSelf: "center",
+    marginVertical: 20,
+    borderRadius: 10
+  },
+  input: {
+    padding: 10,
+    fontSize: 16,
+    color: colors.whiteText
   }
 });
 
