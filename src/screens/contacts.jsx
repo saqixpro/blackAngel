@@ -86,8 +86,23 @@ class Contacts extends Component {
       .where("phoneNumber", "==", phone)
       .get();
     this.setState({ loading: false });
-    if (user.docs.length > 0) alert(`user exists`);
-    else if (this.state.canSendSMS)
+    if (user.docs.length > 0) {
+      user.docs.map((doc) => {
+        let response = fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            to: doc.data().token,
+            sound: "default",
+            title: `Black Angel`,
+            body: `Auto Generated Message!`
+          })
+        });
+      });
+    } else if (this.state.canSendSMS)
       await this.sendSMSAsync(phone, `Auto Generated Message!`);
   };
 

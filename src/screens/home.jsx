@@ -7,7 +7,6 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 const { width, height } = Dimensions.get("screen");
 import { connect } from "react-redux";
 import * as ActionTypes from "../store/actiontypes";
-
 import * as Contacts from "expo-contacts";
 
 const Home = (props) => {
@@ -30,7 +29,7 @@ const Home = (props) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <Header />
-      <MapView mapType="hybrid" style={styles.mapView}></MapView>
+      <MapView mapType="terrain" style={styles.mapView}></MapView>
       <View style={styles.bottomBar}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button}>

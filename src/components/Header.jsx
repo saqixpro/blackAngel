@@ -4,6 +4,7 @@ import { View, StyleSheet, Dimensions, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../constants/theme";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import firebase from "firebase";
 
 const { width } = Dimensions.get("screen");
 
@@ -32,7 +33,7 @@ const Header = (props) => {
             </TouchableOpacity>
           </View>
           <View style={styles.exitIcon}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => firebase.auth().signOut()}>
               <Ionicons name="md-exit" color={colors.whiteText} size={26} />
             </TouchableOpacity>
           </View>

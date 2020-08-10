@@ -1,14 +1,30 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import firebase from "firebase";
 import AppStack from "./AppStack";
 import AuthStack from "./AuthStack";
-
 import { connect } from "react-redux";
+import Loader from "./Loader";
 
 const MainNavigator = (props) => {
+  const [loggedIn, setLoggedIn] = useState(null);
+
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) setLoggedIn(true);
+      else setLoggedIn(false);
+    });
+  });
+
   return (
     <NavigationContainer>
-      {props.loggedIn ? <AppStack /> : <AuthStack />}
+      {loggedIn ? (
+        <AppStack />
+      ) : loggedIn === false ? (
+        <AuthStack />
+      ) : (
+        <Loader />
+      )}
     </NavigationContainer>
   );
 };

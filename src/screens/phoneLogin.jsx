@@ -149,8 +149,6 @@ function App(props) {
 
                 await savePhoneNumberToFireStoreAsync(userID);
 
-                props.Login(firebase.auth().currentUser);
-
                 showMessage({ text: "Phone authentication successful 👍" });
                 // props.navigation.navigate("UsernameUpdate")
               } catch (err) {
@@ -189,15 +187,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => {
-  return {
-    Login: (user) =>
-      dispatch({
-        type: ActionTypes.LoginUser,
-        payload: {
-          user
-        }
-      })
-  };
+  return {};
 };
 
 const connectComponent = connect(mapStateToProps, mapDispatchToProps);

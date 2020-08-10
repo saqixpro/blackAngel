@@ -1,31 +1,89 @@
-import React from "react";
+import React, { Component } from "react";
 import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
 import { colors } from "../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import firebase from "firebase";
+import Constants from "expo-constants";
+import * as Permissions from "expo-permissions";
+import * as Notifications from "expo-notifications";
+
 const { width, height } = Dimensions.get("screen");
 
-const Welcome = (props) => {
-  const handlePress = () => {
-    props.navigation.navigate("Home");
+class Welcome extends Component {
+  handlePress = () => {
+    this.props.navigation.navigate("Home");
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.mainApp}>
-        <View style={[styles.centerAlign, { height: height / 1.15 }]}>
-          <Image
-            source={require("../assets/images/test.png")}
-            style={styles.image}
-          />
-          <TouchableOpacity onPress={handlePress} style={styles.button}>
-            <Text style={styles.buttonText}>Enter</Text>
-          </TouchableOpacity>
+  componentDidMount = async () => {
+    let token = await this.registerForPushNotifications();
+  };
+
+  registerForPushNotifications = async () => {
+    let user = firebase.auth().currentUser.uid;
+    let token;
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Permissions.getAsync(
+        Permissions.NOTIFICATIONS
+      );
+      let finalStatus = existingStatus;
+      console.log("-===--", finalStatus);
+      if (existingStatus !== "granted") {
+        const { status } = await Permissions.askAsync(
+          Permissions.NOTIFICATIONS
+        );
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification!");
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      const db = firebase.firestore();
+      db.collection("Users")
+        .doc(user)
+        .set(
+          {
+            token: token ? token : ""
+          },
+          { merge: true }
+        )
+        .then((data) => {});
+
+      console.log(token);
+    } else {
+      alert("Must use physical device for Push Notifications");
+    }
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C"
+      });
+    }
+
+    return token;
+  };
+
+  render() {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.mainApp}>
+          <View style={[styles.centerAlign, { height: height / 1.15 }]}>
+            <Image
+              source={require("../assets/images/test.png")}
+              style={styles.image}
+            />
+            <TouchableOpacity onPress={this.handlePress} style={styles.button}>
+              <Text style={styles.buttonText}>Enter</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
-  );
-};
+      </SafeAreaView>
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   mainApp: {
