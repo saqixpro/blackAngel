@@ -4,6 +4,7 @@
     "slug": "blackAngel",
     "version": "1.0.0",
     "orientation": "portrait",
+    "platforms": ["ios", "android"],
     "icon": "./src/assets/images/icon.png",
     "splash": {
       "image": "./src/assets/images/splash.png",
@@ -14,6 +15,14 @@
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
+    "android": {
+      "versionCode": 1,
+      "config": {
+        "googleMaps": {
+          "apiKey": "to be added"
+        }
+      }
+    },
     "ios": {
       "supportsTablet": true
     },

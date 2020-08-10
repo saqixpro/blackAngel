@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Component } from "react";
+import React, { Component } from "react";
 import { connect } from "react-redux";
 import {
   Dimensions,
@@ -60,7 +60,7 @@ class Contacts extends Component {
     searchFilter: null
   };
 
-  async componentDidMount() {
+  componentDidMount = async () => {
     this.setState({ contacts: this.props.contacts });
 
     const isAvailable = await SMS.isAvailableAsync();
@@ -71,7 +71,7 @@ class Contacts extends Component {
         `SMS is not available on this Device, Some functionalities might not work properly!`
       );
     }
-  }
+  };
 
   sendSMSAsync = async (phone, message) => {
     const { result } = await SMS.sendSMSAsync([phone], message);
