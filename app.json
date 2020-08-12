@@ -7,9 +7,9 @@
     "platforms": ["ios", "android"],
     "icon": "./src/assets/images/icon.png",
     "splash": {
-      "image": "./src/assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./src/assets/images/test.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#00000"
     },
     "updates": {
       "fallbackToCacheTimeout": 0

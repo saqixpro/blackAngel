@@ -6,7 +6,9 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert
+  Alert,
+  Platform,
+  Modal
 } from "react-native";
 import {
   FlatList,
@@ -19,45 +21,17 @@ import { Loading } from "../components/loading";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 import * as SMS from "expo-sms";
+import { Contact } from "../components";
 
 const { width, height } = Dimensions.get("screen");
-
-const Contact = ({ id, name, phoneNumber, onPress }) => {
-  return (
-    <TouchableOpacity onPress={onPress} style={styles.contactCard}>
-      <View style={{ flex: 0.5, alignItems: "flex-start" }}>
-        <Text
-          style={{
-            color: colors.whiteText,
-            paddingVertical: 5,
-            fontWeight: "600",
-            fontSize: 16
-          }}
-        >
-          {"   " + name}
-        </Text>
-      </View>
-      <View style={{ flex: 0.5, alignItems: "center" }}>
-        <Text
-          style={{
-            color: colors.placeholderColor,
-            paddingVertical: 5,
-            fontSize: 13
-          }}
-        >
-          {phoneNumber ? phoneNumber : "No Phone Number Available"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
 
 class Contacts extends Component {
   state = {
     contacts: null,
     loading: false,
     canSendSMS: false,
-    searchFilter: null
+    searchFilter: null,
+    angels: []
   };
 
   componentDidMount = async () => {
@@ -71,6 +45,30 @@ class Contacts extends Component {
         `SMS is not available on this Device, Some functionalities might not work properly!`
       );
     }
+
+    await this.fetchUserAddedAngels();
+  };
+
+  fetchUserAddedAngels = async () => {
+    const user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(firebase.auth().currentUser.uid)
+      .get();
+
+    const Angels = user.data().Angels ? user.data().Angels : null;
+
+    for (let i = 0; i < Angels.length; i++) {
+      const user = await firebase
+        .firestore()
+        .collection("Users")
+        .doc(Angels[i])
+        .get();
+
+      this.setState({ angels: [...this.state.angels, user.data()] });
+    }
+
+    this.setState({ contacts: [...this.state.angels, ...this.state.contacts] });
   };
 
   sendSMSAsync = async (phone, message) => {
@@ -159,11 +157,29 @@ class Contacts extends Component {
             data={this.state.contacts}
             renderItem={({ item }) => (
               <Contact
-                name={item.name}
+                name={item.name || item.username}
                 phoneNumber={
-                  item.phoneNumbers ? item.phoneNumbers[0].digits : null
+                  // item.phoneNumbers ? item.phoneNumbers[0].digits : null
+                  Platform.OS === "ios"
+                    ? item.phoneNumbers
+                      ? item.phoneNumbers[0].digits
+                      : item.phoneNumber
+                      ? item.phoneNumber
+                      : null
+                    : item.phoneNumbers
+                    ? item.phoneNumbers[0].number
+                    : item.phoneNumber
+                    ? item.phoneNumber
+                    : null
                 }
-                onPress={() => this.handlePress(item.phoneNumbers[0].digits)}
+                item={item}
+                onPress={() =>
+                  this.handlePress(
+                    Platform.OS === "ios"
+                      ? item.phoneNumbers[0].digits
+                      : item.phoneNumbers[0].number
+                  )
+                }
               />
             )}
           />
@@ -177,21 +193,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background
   },
-  contactCard: {
-    backgroundColor: colors.secondaryBackground,
-    flexDirection: "row",
-    marginVertical: 15,
-    width: width / 1.1,
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: "#333",
-    shadowOffset: {
-      width: 3,
-      height: 3
-    },
-    shadowOpacity: 0.9,
-    alignSelf: "center"
-  },
+
   title: {
     color: colors.primary,
     fontSize: 25,

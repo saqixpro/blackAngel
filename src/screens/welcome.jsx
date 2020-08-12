@@ -17,6 +17,41 @@ class Welcome extends Component {
 
   componentDidMount = async () => {
     let token = await this.registerForPushNotifications();
+    this.assignUIDForTheUser();
+  };
+
+  generateNewUID = () => {
+    const str = Date.now();
+    const uid = str
+      .toString()
+      .slice(str.toString().length - 5, str.toString().length);
+    return uid;
+  };
+
+  checkUserIDInOtherDocuments = async (uid) => {
+    const users = await firebase.firestore().collection("Users").get();
+
+    const duplicates = users.docs.find((doc) => doc.data.UID === uid);
+
+    if (duplicates.length > 0) return false;
+    else return true;
+  };
+
+  assignUIDForTheUser = async () => {
+    const userID = await firebase.auth().currentUser.uid;
+    const user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(userID)
+      .get();
+    if (user.data().UID) return;
+
+    const UID = this.generateNewUID();
+
+    const validUID = await this.checkUserIDInOtherDocuments();
+
+    if (validUID) await user.ref.set({ UID }, { merge: true });
+    else this.assignUIDForTheUser();
   };
 
   registerForPushNotifications = async () => {
@@ -93,7 +128,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.background
+    backgroundColor: "#000"
   },
   container: {
     backgroundColor: colors.primary,

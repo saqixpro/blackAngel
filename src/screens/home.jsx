@@ -5,7 +5,8 @@ import {
   Text,
   Dimensions,
   StatusBar,
-  Alert
+  Alert,
+  Share
 } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import { colors } from "../constants/theme";
@@ -18,7 +19,6 @@ import * as Contacts from "expo-contacts";
 import * as Permissions from "expo-permissions";
 import * as Location from "expo-location";
 import firebase, { firestore } from "firebase";
-import { FontAwesome5 } from "@expo/vector-icons";
 
 class Home extends Component {
   state = {
@@ -147,6 +147,20 @@ class Home extends Component {
     }
   }
 
+  handlePlusButton = async () => {
+    const userID = firebase.auth().currentUser.uid;
+    const user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(userID)
+      .get();
+
+    const userUID = user.data().UID ? user.data().UID : null;
+
+    if (userUID) Share.share({ url: userUID, message: `${userUID}` });
+    else Alert.alert(`User does not have a uid`);
+  };
+
   render() {
     return (
       <View style={styles.container}>
@@ -154,7 +168,7 @@ class Home extends Component {
         <Header onLocationPress={() => this._getLocationAsync()} />
         <MapView
           initialRegion={this.state.mapRegion}
-          mapType="terrain"
+          mapType="standard"
           followsUserLocation={true}
           style={styles.mapView}
         >
@@ -168,11 +182,7 @@ class Home extends Component {
                   title="Angel"
                   description={angel.data().phoneNumber}
                 >
-                  <FontAwesome5
-                    name="dove"
-                    style={{ color: colors.primary }}
-                    size={26}
-                  />
+                  <View style={styles.userLocationMarker} />
                 </Marker>
               ))
             : null}
@@ -183,18 +193,21 @@ class Home extends Component {
                 latitude: this.state.mapRegion.latitude,
                 longitude: this.state.mapRegion.longitude
               }}
-              title="Username"
+              title={
+                this.state.currentUser
+                  ? this.state.currentUser.username
+                  : "username"
+              }
               description={
                 this.state.currentUser
                   ? this.state.currentUser.phoneNumber
                   : null
               }
             >
-              <FontAwesome5
-                name="map-marker-alt"
-                style={{ color: colors.primary }}
-                size={26}
-              />
+              <View style={styles.userLocationMarker}>
+                <View style={styles.userLoactionMarkerBorder} />
+                <View style={styles.userLocationMarkerCore} />
+              </View>
             </Marker>
           ) : null}
         </MapView>
@@ -207,6 +220,16 @@ class Home extends Component {
               <Text style={styles.buttonText}>
                 {this.state.publicLocation ? "Hide" : "Help"}
               </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              onPress={this.handlePlusButton}
+              style={{
+                ...styles.button
+              }}
+            >
+              <Text style={styles.buttonText}>+</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>
@@ -244,12 +267,12 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     height: height / 8,
     flexDirection: "row"
   },
   buttonContainer: {
-    flex: 0.5,
+    flex: 0.33,
     alignItems: "center"
   },
   button: {
@@ -262,6 +285,42 @@ const styles = StyleSheet.create({
     color: colors.whiteText,
     fontWeight: "600",
     fontSize: 16
+  },
+  userLocationMarker: {
+    width: 28,
+    backgroundColor: "#fff",
+    shadowColor: "#aaa",
+    shadowOffset: {
+      width: 2,
+      height: 2
+    },
+    shadowOpacity: 0.9,
+    height: 28,
+    borderRadius: 50
+  },
+  userLoactionMarkerBorder: {
+    backgroundColor: "#ffffff",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+    zIndex: -10
+  },
+  userLocationMarkerCore: {
+    backgroundColor: colors.primary,
+    width: 22,
+    position: "absolute",
+    top: 3,
+    left: 3,
+    right: 2,
+    bottom: 2,
+    height: 22,
+    borderRadius: 50,
+    zIndex: 10
   }
 });
 
