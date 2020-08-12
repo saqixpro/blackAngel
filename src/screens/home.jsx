@@ -179,10 +179,13 @@ class Home extends Component {
                     longitude: angel.data().location.longitude,
                     latitude: angel.data().location.latitude
                   }}
-                  title="Angel"
+                  title={angel.data().username}
                   description={angel.data().phoneNumber}
                 >
-                  <View style={styles.userLocationMarker} />
+                  <View style={styles.userLocationMarker}>
+                    <View style={styles.userLoactionMarkerBorder} />
+                    <View style={styles.userLocationMarkerCore} />
+                  </View>
                 </Marker>
               ))
             : null}

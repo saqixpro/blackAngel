@@ -7,12 +7,14 @@ import firebase from "firebase";
 import Constants from "expo-constants";
 import * as Permissions from "expo-permissions";
 import * as Notifications from "expo-notifications";
+import { StackActions } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("screen");
 
 class Welcome extends Component {
   handlePress = () => {
-    this.props.navigation.navigate("Home");
+    const resetAction = StackActions.replace("Home");
+    this.props.navigation.dispatch(resetAction);
   };
 
   componentDidMount = async () => {
