@@ -3,5 +3,5 @@ export const colors = {
   background: "#000000",
   whiteText: "#f0f0f0",
   placeholderColor: "#777",
-  secondaryBackground: "#2b2b2b"
+  secondaryBackground: "#3b3b3b"
 };

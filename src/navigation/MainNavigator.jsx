@@ -3,7 +3,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import firebase from "firebase";
 import AppStack from "./AppStack";
 import AuthStack from "./AuthStack";
-import { connect } from "react-redux";
 import Loader from "./Loader";
 
 const MainNavigator = (props) => {
@@ -29,14 +28,4 @@ const MainNavigator = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  return state;
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {};
-};
-
-const connectComponent = connect(mapStateToProps, mapDispatchToProps);
-
-export default connectComponent(MainNavigator);
+export default MainNavigator;

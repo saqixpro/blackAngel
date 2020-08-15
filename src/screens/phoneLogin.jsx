@@ -14,8 +14,6 @@ import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import * as firebase from "firebase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../constants/theme";
-import { connect } from "react-redux";
-import * as ActionTypes from "../store/actiontypes";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -182,14 +180,4 @@ function App(props) {
   );
 }
 
-const mapStateToProps = (state) => {
-  return {};
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {};
-};
-
-const connectComponent = connect(mapStateToProps, mapDispatchToProps);
-
-export default connectComponent(App);
+export default App;

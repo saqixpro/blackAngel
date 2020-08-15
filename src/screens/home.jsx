@@ -13,12 +13,9 @@ import { colors } from "../constants/theme";
 import { Header } from "../components";
 import { TouchableOpacity } from "react-native-gesture-handler";
 const { width, height } = Dimensions.get("screen");
-import { connect } from "react-redux";
-import * as ActionTypes from "../store/actiontypes";
-import * as Contacts from "expo-contacts";
 import * as Permissions from "expo-permissions";
 import * as Location from "expo-location";
-import firebase, { firestore } from "firebase";
+import firebase from "firebase";
 
 class Home extends Component {
   state = {
@@ -27,7 +24,8 @@ class Home extends Component {
     mapRegion: null,
     currentUser: null,
     publicLocation: false,
-    publicAngels: null
+    publicAngels: [],
+    angels: []
   };
 
   checkPublicLocationAsync = async () => {
@@ -47,19 +45,27 @@ class Home extends Component {
   };
 
   getPublicAngels = async () => {
-    const users = await firebase
+    const currentUser = await firebase
       .firestore()
       .collection("Users")
-      .where("publicLocation", "==", true)
+      .doc(firebase.auth().currentUser.uid)
       .get();
 
-    // Exclude Current User (in case if he is publicly available)
+    const angels = currentUser.data().Angels;
 
-    const angels = users.docs.filter(
-      (angel) => angel.data().phoneNumber !== this.state.currentUser.phoneNumber
-    );
+    for (let i = 0; i < angels.length; i++) {
+      const angel = await firebase
+        .firestore()
+        .collection("Users")
+        .doc(angels[i])
+        .get();
 
-    this.setState({ publicAngels: angels });
+      if (angel && angel.data().publicLocation) {
+        this.setState({
+          publicAngels: [...this.state.publicAngels, angel]
+        });
+      }
+    }
   };
 
   makeLocationPublic = async () => {
@@ -134,17 +140,6 @@ class Home extends Component {
         },
         { merge: true }
       );
-
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status === "granted") {
-      const { data } = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers]
-      });
-
-      if (data.length > 0) {
-        this.props.setContacts(data);
-      }
-    }
   }
 
   handlePlusButton = async () => {
@@ -327,17 +322,4 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state) => {
-  return { ...state };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setContacts: (contacts) =>
-      dispatch({ type: ActionTypes.SetContacts, payload: { contacts } })
-  };
-};
-
-const connectComponent = connect(mapStateToProps, mapDispatchToProps);
-
-export default connectComponent(Home);
+export default Home;

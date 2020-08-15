@@ -6,10 +6,10 @@ import { colors } from "../constants/theme";
 
 const { width, height } = Dimensions.get("screen");
 
-export const Contact = ({ id, name, phoneNumber, item, onPress }) => {
+export const Contact = ({ id, name, phoneNumber, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.contactCard}>
-      <View style={{ flex: 0.5, alignItems: "flex-start" }}>
+      <View style={{ flex: 1, alignItems: "flex-start" }}>
         <Text
           style={{
             color: colors.whiteText,

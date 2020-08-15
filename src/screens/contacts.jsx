@@ -19,6 +19,7 @@ import { colors } from "../constants/theme";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
+import * as _contacts from "expo-contacts";
 
 import * as SMS from "expo-sms";
 import { Contact } from "../components";
@@ -35,8 +36,6 @@ class Contacts extends Component {
   };
 
   componentDidMount = async () => {
-    this.setState({ contacts: this.props.contacts });
-
     const isAvailable = await SMS.isAvailableAsync();
     if (isAvailable) {
       this.setState({ canSendSMS: true });
@@ -46,10 +45,12 @@ class Contacts extends Component {
       );
     }
 
-    await this.fetchUserAddedAngels();
+    this.setState({ loading: true });
+
+    this.fetchAngelsAndContacts();
   };
 
-  fetchUserAddedAngels = async () => {
+  fetchAngelsAndContacts = async () => {
     const user = await firebase
       .firestore()
       .collection("Users")
@@ -68,7 +69,10 @@ class Contacts extends Component {
       this.setState({ angels: [...this.state.angels, user.data()] });
     }
 
-    this.setState({ contacts: [...this.state.angels, ...this.state.contacts] });
+    this.setState({
+      contacts: [...this.state.angels],
+      loading: false
+    });
   };
 
   sendSMSAsync = async (phone, message) => {
@@ -105,10 +109,12 @@ class Contacts extends Component {
   };
 
   handleSearch = (text) => {
-    const { contacts } = this.props;
+    const { angels } = this.state;
 
-    const findContacts = contacts.filter((contact) =>
-      contact.name.includes(text)
+    const findContacts = angels.filter((contact) =>
+      contact.name
+        ? contact.name.includes(text)
+        : contact.username.includes(text)
     );
 
     this.setState({ contacts: findContacts });
@@ -136,21 +142,48 @@ class Contacts extends Component {
             </View>
           </View>
           {this.state.loading ? <Loading /> : <View />}
-          <View style={styles.searchInput}>
-            <View style={{ flex: 0.1 }}>
-              <FontAwesome
-                style={{ padding: 10, color: colors.placeholderColor }}
-                name="search"
-                size={18}
-              />
+          <View style={{ flexDirection: "row" }}>
+            <View
+              style={[
+                styles.searchInput,
+                { flex: 0.9, alignItems: "center", marginLeft: 20 }
+              ]}
+            >
+              <View style={{ flex: 0.1 }}>
+                <FontAwesome
+                  style={{ padding: 10, color: colors.placeholderColor }}
+                  name="search"
+                  size={18}
+                />
+              </View>
+              <View style={{ flex: 1, flexDirection: "row" }}>
+                <View>
+                  <TextInput
+                    onChangeText={(text) => this.handleSearch(text)}
+                    placeholderTextColor={colors.placeholderColor}
+                    placeholder="Search"
+                    style={styles.input}
+                  />
+                </View>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <TextInput
-                onChangeText={(text) => this.handleSearch(text)}
-                placeholderTextColor={colors.placeholderColor}
-                placeholder="Search"
-                style={styles.input}
-              />
+            <View
+              style={{
+                flex: 0.2,
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => this.props.navigation.navigate("AddContact")}
+                style={{ backgroundColor: "transparent" }}
+              >
+                <FontAwesome
+                  style={{ color: colors.primary }}
+                  name="plus"
+                  size={26}
+                />
+              </TouchableOpacity>
             </View>
           </View>
           <FlatList
@@ -158,28 +191,9 @@ class Contacts extends Component {
             renderItem={({ item }) => (
               <Contact
                 name={item.name || item.username}
-                phoneNumber={
-                  // item.phoneNumbers ? item.phoneNumbers[0].digits : null
-                  Platform.OS === "ios"
-                    ? item.phoneNumbers
-                      ? item.phoneNumbers[0].digits
-                      : item.phoneNumber
-                      ? item.phoneNumber
-                      : null
-                    : item.phoneNumbers
-                    ? item.phoneNumbers[0].number
-                    : item.phoneNumber
-                    ? item.phoneNumber
-                    : null
-                }
+                phoneNumber={item.phoneNumber}
                 item={item}
-                onPress={() =>
-                  this.handlePress(
-                    Platform.OS === "ios"
-                      ? item.phoneNumbers[0].digits
-                      : item.phoneNumbers[0].number
-                  )
-                }
+                onPress={() => this.handlePress(item.phoneNumber)}
               />
             )}
           />
@@ -215,14 +229,4 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state) => {
-  return { ...state };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {};
-};
-
-const connectComponent = connect(mapStateToProps, mapDispatchToProps);
-
-export default connectComponent(Contacts);
+export default Contacts;
