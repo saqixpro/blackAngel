@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Image, Alert } from "react-native";
 import { colors } from "../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -12,6 +12,9 @@ import { StackActions } from "@react-navigation/native";
 const { width, height } = Dimensions.get("screen");
 
 class Welcome extends Component {
+  state = {
+    angels: []
+  };
   handlePress = () => {
     const resetAction = StackActions.replace("Home");
     this.props.navigation.dispatch(resetAction);
@@ -20,6 +23,45 @@ class Welcome extends Component {
   componentDidMount = async () => {
     let token = await this.registerForPushNotifications();
     this.assignUIDForTheUser();
+    this.sendNotificationToAngels();
+  };
+
+  sendNotificationToAngels = async (cb) => {
+    // Fetch Angels From User Account
+    const currentUser = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(firebase.auth().currentUser.uid)
+      .get();
+
+    currentUser.data().Angels
+      ? currentUser.data().Angels.map(async (angel) => {
+          // Fetch Each Angel's Account
+          const _angel = await firebase
+            .firestore()
+            .collection("Users")
+            .doc(angel)
+            .get();
+
+          // Send Notification To Each Angel
+
+          let response = fetch("https://exp.host/--/api/v2/push/send", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              to: _angel.data().token,
+              sound: "default",
+              title: `Black Angel Alert`,
+              body: `${
+                _angel.data().username
+              } is in danger! please check on them`
+            })
+          });
+        })
+      : null;
   };
 
   generateNewUID = () => {
