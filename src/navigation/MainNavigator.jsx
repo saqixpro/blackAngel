@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import firebase from "firebase";
-import AppStack from "./AppStack";
 import AuthStack from "./AuthStack";
 import Loader from "./Loader";
+import { Drawer } from "./Drawer";
 
 const MainNavigator = (props) => {
   const [loggedIn, setLoggedIn] = useState(null);
@@ -17,13 +17,7 @@ const MainNavigator = (props) => {
 
   return (
     <NavigationContainer>
-      {loggedIn ? (
-        <AppStack />
-      ) : loggedIn === false ? (
-        <AuthStack />
-      ) : (
-        <Loader />
-      )}
+      {loggedIn ? <Drawer /> : loggedIn === false ? <AuthStack /> : <Loader />}
     </NavigationContainer>
   );
 };

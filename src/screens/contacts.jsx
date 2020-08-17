@@ -23,6 +23,8 @@ import * as _contacts from "expo-contacts";
 
 import * as SMS from "expo-sms";
 import { Contact } from "../components";
+import { Header } from "../components";
+import { StatusBar } from "expo-status-bar";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -80,34 +82,6 @@ class Contacts extends Component {
     alert(result);
   };
 
-  // handlePress = async (phone) => {
-  //   this.setState({ loading: true });
-  //   const user = await firebase
-  //     .firestore()
-  //     .collection("Users")
-  //     .where("phoneNumber", "==", phone)
-  //     .get();
-  //   this.setState({ loading: false });
-  //   if (user.docs.length > 0) {
-  //     user.docs.map((doc) => {
-  //       let response = fetch("https://exp.host/--/api/v2/push/send", {
-  //         method: "POST",
-  //         headers: {
-  //           Accept: "application/json",
-  //           "Content-Type": "application/json"
-  //         },
-  //         body: JSON.stringify({
-  //           to: doc.data().token,
-  //           sound: "default",
-  //           title: `Black Angel`,
-  //           body: `Auto Generated Message!`
-  //         })
-  //       });
-  //     });
-  //   } else if (this.state.canSendSMS)
-  //     await this.sendSMSAsync(phone, `Auto Generated Message!`);
-  // };
-
   handleSearch = (text) => {
     const { angels } = this.state;
 
@@ -123,8 +97,10 @@ class Contacts extends Component {
   render() {
     return (
       <View style={{ ...styles.container, width, height }}>
-        <SafeAreaView>
-          <View
+        <StatusBar style="light" />
+        <Header navigation={this.props.navigation} />
+        <View>
+          {/* <View
             style={{
               width,
               padding: 10,
@@ -140,7 +116,7 @@ class Contacts extends Component {
             <View style={{ flex: 1, alignItems: "center" }}>
               <Text style={styles.title}>ANGELS</Text>
             </View>
-          </View>
+          </View> */}
           {this.state.loading ? <Loading /> : <View />}
           <View style={{ flexDirection: "row" }}>
             <View
@@ -196,7 +172,7 @@ class Contacts extends Component {
               />
             )}
           />
-        </SafeAreaView>
+        </View>
       </View>
     );
   }

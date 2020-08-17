@@ -8,19 +8,41 @@ import firebase from "firebase";
 
 const { width } = Dimensions.get("screen");
 
-const Header = (props) => {
+const Header = ({ navigation }) => {
   const handleHelp = () => {
     Alert.alert(`Help Manual Will Be Added Soon...`);
   };
 
   return (
-    <View>
-      <SafeAreaView />
+    <SafeAreaView>
       <View style={styles.container}>
         <View style={styles.iconView}>
-          <TouchableOpacity onPress={props.onLocationPress}>
-            <Entypo name="location" color={colors.whiteText} size={26} />
-          </TouchableOpacity>
+          <View
+            style={{
+              flex: 0.5,
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <Entypo
+                name="dots-three-horizontal"
+                color={colors.whiteText}
+                size={26}
+              />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              flex: 0.5,
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+              <Entypo name="location" color={colors.whiteText} size={26} />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.textView}>
           <Text style={styles.normalText}>Track Protect</Text>
@@ -36,14 +58,14 @@ const Header = (props) => {
               />
             </TouchableOpacity>
           </View>
-          <View style={styles.exitIcon}>
+          {/* <View style={styles.exitIcon}>
             <TouchableOpacity onPress={() => firebase.auth().signOut()}>
               <Ionicons name="md-exit" color={colors.whiteText} size={26} />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -54,19 +76,27 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowColor: "#555",
+    shadowOpacity: 0.7,
+    marginVertical: 0
   },
   rightIcons: {
-    flex: 0.3,
+    flex: 0.2,
     flexDirection: "row",
     marginHorizontal: 3
   },
   iconView: {
-    flex: 0.1,
-    marginHorizontal: 3
+    flex: 0.4,
+    marginHorizontal: 3,
+    flexDirection: "row"
   },
   textView: {
-    flex: 0.6,
+    flex: 0.5,
     marginHorizontal: 20
   },
   smallText: {
@@ -80,7 +110,7 @@ const styles = StyleSheet.create({
   },
   helpIcon: {
     marginHorizontal: 10,
-    flex: 0.5,
+    flex: 1,
     alignItems: "center"
   },
   exitIcon: {
