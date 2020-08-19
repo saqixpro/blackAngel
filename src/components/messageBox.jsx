@@ -5,7 +5,7 @@ import { colors } from "../constants/theme";
 
 const { width, height } = Dimensions.get("screen");
 
-export const Prompt = ({ placeholder, visibility, onChangeText, onSubmit }) => {
+export const MessageBOX = ({ username, problem, onPress, visibility }) => {
   const [animation] = useState(new Animated.Value(0));
 
   const animateComponent = () =>
@@ -50,22 +50,17 @@ export const Prompt = ({ placeholder, visibility, onChangeText, onSubmit }) => {
         </TouchableOpacity>
       </View>
       <View style={{ width: "100%", alignItems: "center" }}>
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>What's Wrong?</Text>
+        <Text style={{ fontSize: 20, fontWeight: "600" }}>{username}</Text>
       </View>
       <View style={styles.inputContainer}>
-        <TextInput
-          placeholderTextColor="#555"
-          style={styles.input}
-          onChangeText={onChangeText}
-          placeholder={placeholder || "Please Describe Your Problem"}
-        />
+        <Text style={{ fontSize: 16, fontWeight: "500" }}>{problem}</Text>
       </View>
       <View style={{ width: "100%", alignItems: "center", marginVertical: 20 }}>
-        <TouchableOpacity style={styles.button} onPress={onSubmit}>
+        <TouchableOpacity style={styles.button} onPress={onPress}>
           <Text
             style={{ fontSize: 18, color: colors.whiteText, fontWeight: "600" }}
           >
-            Submit
+            Mark Safe
           </Text>
         </TouchableOpacity>
       </View>
@@ -95,13 +90,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: "100%",
     padding: 10,
-    marginVertical: 10
+    marginVertical: 10,
+    alignItems: "center"
   },
-  input: {
-    backgroundColor: "rgba(0,0,0,0.1)",
-    borderRadius: 10,
-    padding: 10
-  },
+
   button: {
     backgroundColor: colors.primary,
     padding: 10,

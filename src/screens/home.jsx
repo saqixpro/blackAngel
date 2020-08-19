@@ -10,13 +10,14 @@ import {
 } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import { colors } from "../constants/theme";
-import { Header, Prompt } from "../components";
+import { Header, Prompt, MessageBOX } from "../components";
 import { TouchableOpacity } from "react-native-gesture-handler";
 const { width, height } = Dimensions.get("screen");
 import * as Permissions from "expo-permissions";
 import * as Location from "expo-location";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
+import { StackActions, StackRouter } from "@react-navigation/native";
 
 class DistanceCalculator {
   static calculateDistanceBetweenTwoPoints = (
@@ -66,9 +67,13 @@ class Home extends Component {
     publicAngels: [],
     angels: [],
     animation: new Animated.Value(0),
+    d_animation: new Animated.Value(0),
     modalVisible: false,
     problem: null,
-    loading: false
+    loading: false,
+    boxVisibility: false,
+    currentAngel: null,
+    nearbyUsers: null
   };
 
   blinkAnimation = () => {
@@ -76,6 +81,16 @@ class Home extends Component {
       Animated.timing(this.state.animation, {
         toValue: 1,
         duration: 800,
+        useNativeDriver: true
+      })
+    ).start();
+  };
+
+  dangerousAnimation = () => {
+    Animated.loop(
+      Animated.timing(this.state.d_animation, {
+        toValue: 1,
+        duration: 400,
         useNativeDriver: true
       })
     ).start();
@@ -123,13 +138,39 @@ class Home extends Component {
         body: JSON.stringify({
           to: angel.data().token,
           sound: "default",
-          title: `Black Angel`,
-          body: `${
-            this.state.currentUser ? this.state.currentUser.username : "Someone"
-          } Is In Trouble, Please Check On Him!`
+          title: `${
+            this.state.currentUser ? this.state.currentUser.username : "User"
+          } From Black Angel`,
+          body: `${this.state.problem}`
         })
       });
     });
+  };
+
+  fetchUsersWhoHaveProblemInTwentyMileRadius = async () => {
+    let users = await firebase.firestore().collection("Users").get();
+
+    // Compare Each one's Distance With User's
+
+    const currentUser = users.docs.find(
+      (user) => user.id === firebase.auth().currentUser.uid
+    );
+
+    users = users.docs.filter((user) => user.id !== currentUser.id);
+
+    const nearbyUsers = users.filter((user) => {
+      const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
+        user.data().location.latitude,
+        currentUser.data().location.latitude,
+        user.data().location.longitude,
+        currentUser.data().location.longitude,
+        "M"
+      );
+
+      return distance <= 20;
+    });
+
+    this.setState({ nearbyUsers });
   };
 
   getCurrentUser = async () => {
@@ -172,6 +213,7 @@ class Home extends Component {
     await this.getPublicAngels();
 
     this.blinkAnimation();
+    this.dangerousAnimation();
 
     const userID = await firebase.auth().currentUser.uid;
 
@@ -188,6 +230,8 @@ class Home extends Component {
         },
         { merge: true }
       );
+
+    await this.fetchUsersWhoHaveProblemInTwentyMileRadius();
 
     this.setState({ loading: false });
   }
@@ -208,6 +252,14 @@ class Home extends Component {
   };
 
   handleSubmit = async () => {
+    this.state.currentUser
+      ? await firebase
+          .firestore()
+          .collection("Users")
+          .doc(firebase.auth().currentUser.uid)
+          .set({ problem: true }, { merge: true })
+      : null;
+
     const users = await firebase.firestore().collection("Users").get();
 
     if (!users.empty)
@@ -230,12 +282,12 @@ class Home extends Component {
             body: JSON.stringify({
               to: user.data().token,
               sound: "default",
-              title: `Black Angel`,
-              body: `${
+              title: `${
                 this.state.currentUser
                   ? this.state.currentUser.username
-                  : "Someone"
-              } Is In Trouble, Please Check On Him!`
+                  : "User"
+              } From Black Angel`,
+              body: `${this.state.problem}`
             })
           });
         }
@@ -247,11 +299,44 @@ class Home extends Component {
     );
   };
 
+  markSafePrompt = (id) => {
+    this.setState({ boxVisibility: true, currentAngel: id });
+  };
+
+  markSafe = async () => {
+    const { currentAngel } = this.state;
+
+    await firebase
+      .firestore()
+      .collection("Users")
+      .doc(currentAngel)
+      .set({ problem: false }, { merge: true });
+
+    this.setState({ problem: null, currentAngel: null, boxVisibility: false });
+
+    const response = StackActions.replace("Home");
+    this.props.navigation.dispatch(response);
+  };
+
   render() {
     const circleIntropolate = this.state.animation.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 0.8]
     });
+
+    const dangerous_ColorBlink = this.state.d_animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1.15]
+    });
+
+    const DangerousBlink = {
+      opacity: this.state.d_animation,
+      transform: [
+        {
+          scale: dangerous_ColorBlink
+        }
+      ]
+    };
 
     const BlinkStyle = {
       opacity: this.state.animation,
@@ -265,6 +350,13 @@ class Home extends Component {
     return (
       <View style={styles.container}>
         <Header navigation={this.props.navigation} />
+
+        <MessageBOX
+          problem="Something isn't right!"
+          visibility={this.state.boxVisibility}
+          onPress={this.markSafe}
+          username="Test User"
+        />
 
         <Prompt
           onSubmit={this.handleSubmit}
@@ -282,7 +374,11 @@ class Home extends Component {
           showsUserLocation={!this.state.publicLocation}
           showsTraffic={true}
           userLocationAnnotationTitle={
-            this.state.problem ? this.state.problem : "Test"
+            this.state.problem
+              ? this.state.problem
+              : this.state.currentUser
+              ? this.state.currentUser.username
+              : "Loading..."
           }
           style={styles.mapView}
         >
@@ -295,15 +391,57 @@ class Home extends Component {
                   }}
                   title={angel.data().username}
                   description={angel.data().phoneNumber}
+                  onTouchStart={() =>
+                    angel.data().problem ? this.markSafePrompt(angel.id) : null
+                  }
                 >
                   <Animated.View
-                    style={[styles.userLocationMarker, BlinkStyle]}
+                    style={[
+                      styles.userLocationMarker,
+                      angel.data().problem ? DangerousBlink : BlinkStyle
+                    ]}
                   >
                     <View style={styles.userLoactionMarkerBorder} />
                     <View
                       style={[
                         styles.userLocationMarkerCore,
-                        { backgroundColor: colors.angel }
+                        {
+                          backgroundColor: angel.data().problem
+                            ? "red"
+                            : colors.angel
+                        }
+                      ]}
+                    />
+                  </Animated.View>
+                </Marker>
+              ))
+            : null}
+
+          {this.state.nearbyUsers
+            ? this.state.nearbyUsers.map((user) => (
+                <Marker
+                  coordinate={{
+                    longitude: user.data().location.longitude,
+                    latitude: user.data().location.latitude
+                  }}
+                  title={user.data().username}
+                  description={user.data().phoneNumber}
+                >
+                  <Animated.View
+                    style={[
+                      styles.userLocationMarker,
+                      user.data().problem ? DangerousBlink : BlinkStyle
+                    ]}
+                  >
+                    <View style={styles.userLoactionMarkerBorder} />
+                    <View
+                      style={[
+                        styles.userLocationMarkerCore,
+                        {
+                          backgroundColor: user.data().problem
+                            ? "red"
+                            : colors.user
+                        }
                       ]}
                     />
                   </Animated.View>
@@ -326,7 +464,7 @@ class Home extends Component {
             >
               <Animated.View style={[styles.userLocationMarker, BlinkStyle]}>
                 <View style={styles.userLoactionMarkerBorder} />
-                <View style={styles.userLocationMarkerCore} />
+                <View style={[styles.userLocationMarkerCore]} />
               </Animated.View>
             </Marker>
           ) : null}

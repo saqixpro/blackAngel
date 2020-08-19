@@ -1,6 +1,9 @@
 import React from "react";
 
-import { createStackNavigator } from "@react-navigation/stack";
+import {
+  createStackNavigator,
+  TransitionPresets
+} from "@react-navigation/stack";
 import {
   Welcome,
   Home,
@@ -13,7 +16,12 @@ import {
 const { Navigator, Screen } = createStackNavigator();
 
 const AppStack = () => (
-  <Navigator screenOptions={{ headerShown: false }}>
+  <Navigator
+    screenOptions={{
+      headerShown: false,
+      ...TransitionPresets.RevealFromBottomAndroid
+    }}
+  >
     <Screen name="username" component={UsernameScreen} />
     <Screen name="Angels" component={Angels} />
     <Screen name="Welcome" component={Welcome} />

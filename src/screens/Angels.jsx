@@ -6,7 +6,8 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
-  Image
+  Image,
+  Animated
 } from "react-native";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { colors } from "../constants/theme";
@@ -20,8 +21,21 @@ export class Angels extends Component {
     users: null,
     angels: [],
     uid: null,
-    currentUser: null
+    currentUser: null,
+    animation: new Animated.Value(0)
   };
+
+  AnimateScreen = () =>
+    Animated.timing(this.state.animation, {
+      toValue: 1,
+      duration: 500
+    }).start();
+
+  ReAnimateScreen = () =>
+    Animated.timing(this.state.animation, {
+      toValue: 0,
+      duration: 500
+    }).start();
 
   fetchAllUsersFromFirebase = async () => {
     const data = await firebase.firestore().collection("Users").get();
@@ -114,8 +128,21 @@ export class Angels extends Component {
   };
 
   render() {
+    const alignmentInteropolate = this.state.animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -height / 5]
+    });
+
+    const dynamicStyle = {
+      transform: [
+        {
+          translateY: alignmentInteropolate
+        }
+      ]
+    };
+
     return (
-      <SafeAreaView style={styles.container}>
+      <Animated.View style={[styles.container, dynamicStyle]}>
         <View
           style={{ flex: 0.4, justifyContent: "center", alignItems: "center" }}
         >
@@ -138,6 +165,8 @@ export class Angels extends Component {
             <TextInput
               placeholderTextColor={colors.placeholderColor}
               maxLength={5}
+              onFocus={this.AnimateScreen}
+              onBlur={this.ReAnimateScreen}
               onChangeText={(text) => this.setState({ uid: text })}
               placeholder="Enter User uid"
               keyboardType="numeric"
@@ -172,7 +201,7 @@ export class Angels extends Component {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </Animated.View>
     );
   }
 }

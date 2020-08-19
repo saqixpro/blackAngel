@@ -4,5 +4,6 @@ export const colors = {
   whiteText: "#f0f0f0",
   placeholderColor: "#777",
   secondaryBackground: "#3b3b3b",
-  angel: "#63f542"
+  angel: "#63a542",
+  user: "#7b42f5"
 };
