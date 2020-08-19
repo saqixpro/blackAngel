@@ -8,6 +8,8 @@ import Constants from "expo-constants";
 import * as Permissions from "expo-permissions";
 import * as Notifications from "expo-notifications";
 import { StackActions } from "@react-navigation/native";
+import { connect } from "react-redux";
+import * as Types from "../store/types";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -33,6 +35,8 @@ class Welcome extends Component {
       .collection("Users")
       .doc(firebase.auth().currentUser.uid)
       .get();
+
+    this.props.loginUser(currentUser.data());
 
     currentUser.data().Angels
       ? currentUser.data().Angels.map(async (angel) => {
@@ -164,6 +168,22 @@ class Welcome extends Component {
   }
 }
 
+const mapStateToProps = (state) => ({
+  user: state.user
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  loginUser: (user) =>
+    dispatch({
+      type: Types.loginUser,
+      payload: {
+        user: user
+      }
+    })
+});
+
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
+
 const styles = StyleSheet.create({
   mainApp: {
     width,
@@ -201,4 +221,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Welcome;
+export default connectComponent(Welcome);

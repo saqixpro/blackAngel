@@ -4,20 +4,19 @@ import {
   View,
   Text,
   Dimensions,
-  StatusBar,
   Alert,
   Share,
-  SafeAreaView,
   Animated
 } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import { colors } from "../constants/theme";
-import { Header } from "../components";
+import { Header, Prompt } from "../components";
 import { TouchableOpacity } from "react-native-gesture-handler";
 const { width, height } = Dimensions.get("screen");
 import * as Permissions from "expo-permissions";
 import * as Location from "expo-location";
 import firebase from "firebase";
+import { Loading } from "../components/loading";
 
 class DistanceCalculator {
   static calculateDistanceBetweenTwoPoints = (
@@ -27,7 +26,7 @@ class DistanceCalculator {
     long2,
     unit
   ) => {
-    if (lat1 == lat2 && lon1 == lon2) {
+    if (lat1 == lat2 && long1 == long2) {
       return 0;
     } else {
       let radlat1 = (Math.PI * lat1) / 180;
@@ -66,7 +65,10 @@ class Home extends Component {
     publicLocation: false,
     publicAngels: [],
     angels: [],
-    animation: new Animated.Value(0)
+    animation: new Animated.Value(0),
+    modalVisible: false,
+    problem: null,
+    loading: false
   };
 
   blinkAnimation = () => {
@@ -77,22 +79,6 @@ class Home extends Component {
         useNativeDriver: true
       })
     ).start();
-  };
-
-  checkPublicLocationAsync = async () => {
-    const userID = firebase.auth().currentUser.uid;
-    const user = await firebase
-      .firestore()
-      .collection("Users")
-      .doc(userID)
-      .get();
-
-    const { publicLocation } = user.data();
-
-    if (!publicLocation)
-      await user.ref.set({ publicLocation: false }, { merge: true });
-
-    this.setState({ publicLocation });
   };
 
   getPublicAngels = async () => {
@@ -123,55 +109,27 @@ class Home extends Component {
   RequestHelp = async () => {
     // const userID = await firebase.auth().currentUser.uid;
 
-    // Send Notification to Angels Within 20 Miles
+    this.setState({ modalVisible: true, publicLocation: true });
 
-    this.state.publicAngels
-      ? this.state.publicAngels.map((angel) => {
-          const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
-            this.state.mapRegion.latitude,
-            angel.data().location.latitude,
-            this.state.mapRegion.longitude,
-            angel.data().location.longitude
-          );
+    // Send Notification to Angels
 
-          console.log(distance);
-
-          if (distance <= 20) {
-            // alert(`${angel.data().username} will get a notification`);
-            let response = fetch("https://exp.host/--/api/v2/push/send", {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                to: angel.data().token,
-                sound: "default",
-                title: `Black Angel`,
-                body: `${
-                  this.state.currentUser
-                    ? this.state.currentUser.username
-                    : "Someone"
-                } Is In Trouble, Please Check On Him!`
-              })
-            });
-          }
+    this.state.publicAngels.map((angel) => {
+      let response = fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          to: angel.data().token,
+          sound: "default",
+          title: `Black Angel`,
+          body: `${
+            this.state.currentUser ? this.state.currentUser.username : "Someone"
+          } Is In Trouble, Please Check On Him!`
         })
-      : null;
-
-    // await firebase
-    //   .firestore()
-    //   .collection("Users")
-    //   .doc(userID)
-    //   .set({ publicLocation: !this.state.publicLocation }, { merge: true });
-
-    // this.setState({ publicLocation: !this.state.publicLocation });
-
-    // Alert.alert(
-    //   this.state.publicLocation
-    //     ? `Your Location is Now Public, \n Other Angels Can See You Now!`
-    //     : `Your Location is Now Private, \n Other Angels Can't See You Now!`
-    // );
+      });
+    });
   };
 
   getCurrentUser = async () => {
@@ -208,7 +166,7 @@ class Home extends Component {
   };
 
   async componentDidMount() {
-    await this.checkPublicLocationAsync();
+    this.setState({ loading: true });
     await this._getLocationAsync();
     await this.getCurrentUser();
     await this.getPublicAngels();
@@ -230,6 +188,8 @@ class Home extends Component {
         },
         { merge: true }
       );
+
+    this.setState({ loading: false });
   }
 
   handlePlusButton = async () => {
@@ -245,6 +205,46 @@ class Home extends Component {
 
     if (userUID) Share.share({ url: userUID, message: `${userUID}` });
     else Alert.alert(`User does not have a uid`);
+  };
+
+  handleSubmit = async () => {
+    const users = await firebase.firestore().collection("Users").get();
+
+    if (!users.empty)
+      users.docs.map((user) => {
+        const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
+          this.state.mapRegion.latitude,
+          user.data().location.latitude,
+          this.state.mapRegion.longitude,
+          user.data().location.longitude
+        );
+
+        if (distance <= 20) {
+          // alert(`${angel.data().username} will get a notification`);
+          let response = fetch("https://exp.host/--/api/v2/push/send", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              to: user.data().token,
+              sound: "default",
+              title: `Black Angel`,
+              body: `${
+                this.state.currentUser
+                  ? this.state.currentUser.username
+                  : "Someone"
+              } Is In Trouble, Please Check On Him!`
+            })
+          });
+        }
+        this.setState({ modalVisible: false });
+      });
+
+    Alert.alert(
+      `A Notification Your Angels and Other Nearby Users Have Been Sent!`
+    );
   };
 
   render() {
@@ -265,13 +265,25 @@ class Home extends Component {
     return (
       <View style={styles.container}>
         <Header navigation={this.props.navigation} />
+
+        <Prompt
+          onSubmit={this.handleSubmit}
+          visibility={this.state.modalVisible}
+          onChangeText={(text) => this.setState({ problem: text })}
+        />
+
+        {this.state.loading ? <Loading /> : null}
+
         <MapView
           initialRegion={this.state.mapRegion}
           mapType="standard"
           showsBuildings={true}
           showsMyLocationButton={true}
-          showsUserLocation={true}
+          showsUserLocation={!this.state.publicLocation}
           showsTraffic={true}
+          userLocationAnnotationTitle={
+            this.state.problem ? this.state.problem : "Test"
+          }
           style={styles.mapView}
         >
           {this.state.publicAngels
@@ -298,8 +310,8 @@ class Home extends Component {
                 </Marker>
               ))
             : null}
-          {/* 
-          {this.state.mapRegion ? (
+
+          {this.state.mapRegion && this.state.publicLocation ? (
             <Marker
               coordinate={{
                 latitude: this.state.mapRegion.latitude,
@@ -310,18 +322,14 @@ class Home extends Component {
                   ? this.state.currentUser.username
                   : "username"
               }
-              description={
-                this.state.currentUser
-                  ? this.state.currentUser.phoneNumber
-                  : null
-              }
+              description={this.state.problem ? this.state.problem : null}
             >
               <Animated.View style={[styles.userLocationMarker, BlinkStyle]}>
                 <View style={styles.userLoactionMarkerBorder} />
                 <View style={styles.userLocationMarkerCore} />
               </Animated.View>
             </Marker>
-          ) : null} */}
+          ) : null}
         </MapView>
         <View style={styles.bottomBar}>
           <View style={styles.buttonContainer}>
