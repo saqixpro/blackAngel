@@ -63,7 +63,6 @@ class Home extends Component {
     locationResult: null,
     mapRegion: null,
     currentUser: null,
-    publicLocation: false,
     publicAngels: [],
     angels: [],
     animation: new Animated.Value(0),
@@ -124,7 +123,7 @@ class Home extends Component {
   RequestHelp = async () => {
     // const userID = await firebase.auth().currentUser.uid;
 
-    this.setState({ modalVisible: true, publicLocation: true });
+    this.setState({ modalVisible: true });
 
     // Send Notification to Angels
 
@@ -148,6 +147,14 @@ class Home extends Component {
   };
 
   fetchUsersWhoHaveProblemInTwentyMileRadius = async () => {
+    const _user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(firebase.auth().currentUser.uid)
+      .get();
+
+    const angels = _user.data().Angels;
+
     let users = await firebase.firestore().collection("Users").get();
 
     // Compare Each one's Distance With User's
@@ -156,7 +163,12 @@ class Home extends Component {
       (user) => user.id === firebase.auth().currentUser.uid
     );
 
-    users = users.docs.filter((user) => user.id !== currentUser.id);
+    for (const angel of angels) {
+      users = users.docs.filter(
+        (user) =>
+          user.id !== angel && user.id !== firebase.auth().currentUser.uid
+      );
+    }
 
     const nearbyUsers = users.filter((user) => {
       const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
@@ -257,7 +269,7 @@ class Home extends Component {
           .firestore()
           .collection("Users")
           .doc(firebase.auth().currentUser.uid)
-          .set({ problem: true }, { merge: true })
+          .set({ problem: this.state.problem }, { merge: true })
       : null;
 
     const users = await firebase.firestore().collection("Users").get();
@@ -310,12 +322,42 @@ class Home extends Component {
       .firestore()
       .collection("Users")
       .doc(currentAngel)
-      .set({ problem: false }, { merge: true });
+      .set({ problem: "" }, { merge: true });
 
     this.setState({ problem: null, currentAngel: null, boxVisibility: false });
 
     const response = StackActions.replace("Home");
     this.props.navigation.dispatch(response);
+  };
+
+  markSelfSafe = async () => {
+    await firebase
+      .firestore()
+      .collection("Users")
+      .doc(firebase.auth().currentUser.uid)
+      .set({ problem: "" }, { merge: true });
+
+    const action = StackActions.replace("Home");
+    this.props.navigation.dispatch(action);
+  };
+
+  userMarkAsSafePrompt = () => {
+    Alert.alert(
+      "Mark Safe",
+      "Are You Sure You Want To Mark Yourself as Safe?",
+      [
+        {
+          text: "Yes",
+          onPress: this.markSelfSafe,
+          style: "default"
+        },
+        {
+          text: "No",
+          onPress: () => console.log(`Action Cancelled`),
+          style: "cancel"
+        }
+      ]
+    );
   };
 
   render() {
@@ -352,10 +394,10 @@ class Home extends Component {
         <Header navigation={this.props.navigation} />
 
         <MessageBOX
-          problem="Something isn't right!"
+          problem="Press 'Mark Safe' if the user is out of danger!"
           visibility={this.state.boxVisibility}
           onPress={this.markSafe}
-          username="Test User"
+          username="What's The Condition Now?"
         />
 
         <Prompt
@@ -371,7 +413,6 @@ class Home extends Component {
           mapType="standard"
           showsBuildings={true}
           showsMyLocationButton={true}
-          showsUserLocation={!this.state.publicLocation}
           showsTraffic={true}
           userLocationAnnotationTitle={
             this.state.problem
@@ -395,24 +436,33 @@ class Home extends Component {
                     angel.data().problem ? this.markSafePrompt(angel.id) : null
                   }
                 >
-                  <Animated.View
-                    style={[
-                      styles.userLocationMarker,
-                      angel.data().problem ? DangerousBlink : BlinkStyle
-                    ]}
-                  >
-                    <View style={styles.userLoactionMarkerBorder} />
-                    <View
+                  <View>
+                    <Animated.View
                       style={[
-                        styles.userLocationMarkerCore,
-                        {
-                          backgroundColor: angel.data().problem
-                            ? "red"
-                            : colors.angel
-                        }
+                        styles.userLocationMarker,
+                        angel.data().problem ? DangerousBlink : BlinkStyle
                       ]}
-                    />
-                  </Animated.View>
+                    >
+                      <View style={styles.userLoactionMarkerBorder} />
+                      <View
+                        style={[
+                          styles.userLocationMarkerCore,
+                          {
+                            backgroundColor: angel.data().problem
+                              ? "red"
+                              : colors.angel
+                          }
+                        ]}
+                      />
+                    </Animated.View>
+                    {angel.data().problem ? (
+                      <View style={[styles.textContainer, { marginLeft: -70 }]}>
+                        <Text style={{ color: "white", fontWeight: "600" }}>
+                          {angel.data().problem}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </Marker>
               ))
             : null}
@@ -427,29 +477,38 @@ class Home extends Component {
                   title={user.data().username}
                   description={user.data().phoneNumber}
                 >
-                  <Animated.View
-                    style={[
-                      styles.userLocationMarker,
-                      user.data().problem ? DangerousBlink : BlinkStyle
-                    ]}
-                  >
-                    <View style={styles.userLoactionMarkerBorder} />
-                    <View
+                  <View>
+                    <Animated.View
                       style={[
-                        styles.userLocationMarkerCore,
-                        {
-                          backgroundColor: user.data().problem
-                            ? "red"
-                            : colors.user
-                        }
+                        styles.userLocationMarker,
+                        user.data().problem ? DangerousBlink : BlinkStyle
                       ]}
-                    />
-                  </Animated.View>
+                    >
+                      <View style={styles.userLoactionMarkerBorder} />
+                      <View
+                        style={[
+                          styles.userLocationMarkerCore,
+                          {
+                            backgroundColor: user.data().problem
+                              ? "red"
+                              : colors.user
+                          }
+                        ]}
+                      />
+                    </Animated.View>
+                    {user.data().problem ? (
+                      <View style={styles.textContainer}>
+                        <Text style={{ color: "white", fontWeight: "600" }}>
+                          {user.data().problem}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </Marker>
               ))
             : null}
 
-          {this.state.mapRegion && this.state.publicLocation ? (
+          {this.state.mapRegion ? (
             <Marker
               coordinate={{
                 latitude: this.state.mapRegion.latitude,
@@ -462,10 +521,29 @@ class Home extends Component {
               }
               description={this.state.problem ? this.state.problem : null}
             >
-              <Animated.View style={[styles.userLocationMarker, BlinkStyle]}>
-                <View style={styles.userLoactionMarkerBorder} />
-                <View style={[styles.userLocationMarkerCore]} />
-              </Animated.View>
+              <View style={styles.markerContainer}>
+                <Animated.View style={[styles.userLocationMarker, BlinkStyle]}>
+                  <View style={styles.userLoactionMarkerBorder} />
+                  <View style={[styles.userLocationMarkerCore]} />
+                </Animated.View>
+                {this.state.currentUser && this.state.currentUser.problem ? (
+                  <View style={{ marginVertical: 10, marginLeft: -20 }}>
+                    <View style={styles.textContainer}>
+                      <Text style={{ color: "white", fontWeight: "600" }}>
+                        {this.state.currentUser.problem}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={this.userMarkAsSafePrompt}
+                      style={styles.actionButton}
+                    >
+                      <Text style={{ color: "white", fontWeight: "600" }}>
+                        Mark Safe
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+              </View>
             </Marker>
           ) : null}
         </MapView>
@@ -550,7 +628,8 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   userLocationMarker: {
-    width: 28,
+    width: 26,
+    height: 26,
     backgroundColor: "#fff",
     shadowColor: "#aaa",
     shadowOffset: {
@@ -558,7 +637,6 @@ const styles = StyleSheet.create({
       height: 2
     },
     shadowOpacity: 0.9,
-    height: 28,
     borderRadius: 50
   },
   userLoactionMarkerBorder: {
@@ -584,6 +662,28 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 50,
     zIndex: 10
+  },
+  textContainer: {
+    backgroundColor: "rgba(0,0,0,0.5)",
+    maxWidth: 200,
+    minWidth: 150,
+    padding: 10,
+    // marginLeft: -70,
+    marginVertical: 10,
+    borderRadius: 10
+  },
+  actionButton: {
+    backgroundColor: "rgba(50,130,200,0.7)",
+    padding: 10,
+    alignItems: "center",
+    borderRadius: 10
+  },
+  markerContainer: {
+    borderRadius: 70,
+    width: 120,
+    height: 120,
+    alignItems: "center",
+    justifyContent: "center"
   }
 });
 

@@ -5,12 +5,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../constants/theme";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import firebase from "firebase";
+import { StackActions } from "@react-navigation/native";
 
 const { width } = Dimensions.get("screen");
 
 const Header = ({ navigation }) => {
   const handleHelp = () => {
     Alert.alert(`Help Manual Will Be Added Soon...`);
+  };
+
+  const refreshHome = () => {
+    const action = StackActions.replace("Home");
+    navigation.dispatch(action);
   };
 
   return (
@@ -39,7 +45,7 @@ const Header = ({ navigation }) => {
               justifyContent: "center"
             }}
           >
-            <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+            <TouchableOpacity onPress={refreshHome}>
               <Entypo name="location" color={colors.whiteText} size={26} />
             </TouchableOpacity>
           </View>
