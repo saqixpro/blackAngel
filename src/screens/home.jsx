@@ -6,18 +6,25 @@ import {
   Dimensions,
   Alert,
   Share,
-  Animated
+  Animated,
+  TouchableOpacity,
+  Platform
 } from "react-native";
-import MapView, { Marker, Circle } from "react-native-maps";
+import MapView, {
+  Marker,
+  Circle,
+  Callout,
+  CalloutSubview
+} from "react-native-maps";
 import { colors } from "../constants/theme";
 import { Header, Prompt, MessageBOX } from "../components";
-import { TouchableOpacity } from "react-native-gesture-handler";
 const { width, height } = Dimensions.get("screen");
 import * as Permissions from "expo-permissions";
 import * as Location from "expo-location";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
 import { StackActions, StackRouter } from "@react-navigation/native";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 class DistanceCalculator {
   static calculateDistanceBetweenTwoPoints = (
@@ -118,6 +125,25 @@ class Home extends Component {
             });
         })
       : null;
+  };
+
+  AppendHelpToHistory = async () => {
+    const History = await firebase
+      .firestore()
+      .collection("History")
+      .doc("helpHistory")
+      .get();
+
+    const { history } = History.data();
+
+    const data = {
+      id: Date.now(),
+      timestamp: new Date().toString(),
+      problem: this.state.problem,
+      user: firebase.auth().currentUser.uid
+    };
+
+    await History.ref.set({ history: [...history, data] }, { merge: true });
   };
 
   RequestHelp = async () => {
@@ -249,21 +275,12 @@ class Home extends Component {
   }
 
   handlePlusButton = async () => {
-    // Test Distance
-    const userID = firebase.auth().currentUser.uid;
-    const user = await firebase
-      .firestore()
-      .collection("Users")
-      .doc(userID)
-      .get();
-
-    const userUID = user.data().UID ? user.data().UID : null;
-
-    if (userUID) Share.share({ url: userUID, message: `${userUID}` });
-    else Alert.alert(`User does not have a uid`);
+    this.props.navigation.navigate("History");
   };
 
   handleSubmit = async () => {
+    this.AppendHelpToHistory();
+
     this.state.currentUser
       ? await firebase
           .firestore()
@@ -272,10 +289,14 @@ class Home extends Component {
           .set({ problem: this.state.problem }, { merge: true })
       : null;
 
-    const users = await firebase.firestore().collection("Users").get();
+    let users = await firebase.firestore().collection("Users").get();
+
+    users = users.docs.filter(
+      (user) => user.id !== firebase.auth().currentUser.uid
+    );
 
     if (!users.empty)
-      users.docs.map((user) => {
+      users.map((user) => {
         const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
           this.state.mapRegion.latitude,
           user.data().location.latitude,
@@ -432,7 +453,7 @@ class Home extends Component {
                   }}
                   title={angel.data().username}
                   description={angel.data().phoneNumber}
-                  onTouchStart={() =>
+                  onPress={() =>
                     angel.data().problem ? this.markSafePrompt(angel.id) : null
                   }
                 >
@@ -520,6 +541,11 @@ class Home extends Component {
                   : "username"
               }
               description={this.state.problem ? this.state.problem : null}
+              onPress={
+                this.state.currentUser && this.state.currentUser.problem
+                  ? this.userMarkAsSafePrompt
+                  : null
+              }
             >
               <View style={styles.markerContainer}>
                 <Animated.View style={[styles.userLocationMarker, BlinkStyle]}>
@@ -527,15 +553,15 @@ class Home extends Component {
                   <View style={[styles.userLocationMarkerCore]} />
                 </Animated.View>
                 {this.state.currentUser && this.state.currentUser.problem ? (
-                  <View style={{ marginVertical: 10, marginLeft: -20 }}>
+                  <View style={{}}>
                     <View style={styles.textContainer}>
                       <Text style={{ color: "white", fontWeight: "600" }}>
                         {this.state.currentUser.problem}
                       </Text>
                     </View>
                     <TouchableOpacity
-                      onPress={this.userMarkAsSafePrompt}
                       style={styles.actionButton}
+                      onPress={this.userMarkAsSafePrompt}
                     >
                       <Text style={{ color: "white", fontWeight: "600" }}>
                         Mark Safe
@@ -563,7 +589,7 @@ class Home extends Component {
                 ...styles.button
               }}
             >
-              <Text style={styles.buttonText}>+</Text>
+              <FontAwesome5 name="globe" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>
@@ -667,10 +693,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     maxWidth: 200,
     minWidth: 150,
-    padding: 10,
+    padding: 4,
     // marginLeft: -70,
-    marginVertical: 10,
-    borderRadius: 10
+    marginVertical: 2,
+    borderRadius: 10,
+    textAlign: "center"
   },
   actionButton: {
     backgroundColor: "rgba(50,130,200,0.7)",
@@ -680,8 +707,6 @@ const styles = StyleSheet.create({
   },
   markerContainer: {
     borderRadius: 70,
-    width: 120,
-    height: 120,
     alignItems: "center",
     justifyContent: "center"
   }

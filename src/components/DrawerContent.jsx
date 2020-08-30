@@ -69,10 +69,18 @@ const Content = (props) => {
         <Loading />
       )}
       <View style={styles.offset} />
+      {/* <View style={styles.content}>
+        <TouchableOpacity
+          onPress={() => props.navigation.navigate("History")}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>History</Text>
+        </TouchableOpacity>
+      </View> */}
       <View style={styles.content}>
         <TouchableOpacity
           onPress={() => firebase.auth().signOut()}
-          style={styles.button}
+          style={{ ...styles.button, backgroundColor: "red" }}
         >
           <Text style={styles.buttonText}>Log Out</Text>
         </TouchableOpacity>

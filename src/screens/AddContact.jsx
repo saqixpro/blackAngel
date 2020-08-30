@@ -6,14 +6,15 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
-  Image
+  Image,
+  Animated
 } from "react-native";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { colors } from "../constants/theme";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
 import { StackActions, NavigationAction } from "@react-navigation/native";
-
+import { Entypo } from "@expo/vector-icons";
 const { width, height } = Dimensions.get("screen");
 
 export class AddContact extends Component {
@@ -22,8 +23,21 @@ export class AddContact extends Component {
     angels: [],
     uid: null,
     currentUser: null,
-    loading: false
+    loading: false,
+    animation: new Animated.Value(0)
   };
+
+  AnimateScreen = () =>
+    Animated.timing(this.state.animation, {
+      toValue: 1,
+      duration: 500
+    }).start();
+
+  ReAnimateScreen = () =>
+    Animated.timing(this.state.animation, {
+      toValue: 0,
+      duration: 500
+    }).start();
 
   fetchAllUsersFromFirebase = async () => {
     const data = await firebase.firestore().collection("Users").get();
@@ -42,6 +56,8 @@ export class AddContact extends Component {
     if (!user.empty) {
       const _usr = user.docs.find((user) => user.data().UID == uid);
       return _usr;
+    } else {
+      Alert.alert(`User Not Found`);
     }
   };
 
@@ -60,8 +76,29 @@ export class AddContact extends Component {
       this.setState({ loading: true });
       const _usr = await this.findUserByUID(this.state.uid);
 
+      if (!_usr) {
+        this.setState({ loading: false });
+        return;
+      }
+
       // Add That User To The Angels List Of This User
       this.setState({ angels: [...this.state.angels, _usr.id] });
+
+      const user = await firebase
+        .firestore()
+        .collection("Users")
+        .doc(firebase.auth().currentUser.uid)
+        .get();
+
+      const { Angels } = user.data();
+
+      if (Angels.includes(_usr.id)) {
+        Alert.alert(`Angel Already Added`);
+        this.setState({ loading: false });
+        return;
+      }
+
+      user.ref.set({ Angels: this.state.angels }, { merge: true });
 
       // Send Notification To That User
       let response = fetch("https://exp.host/--/api/v2/push/send", {
@@ -80,12 +117,6 @@ export class AddContact extends Component {
         })
       });
 
-      await firebase
-        .firestore()
-        .collection("Users")
-        .doc(firebase.auth().currentUser.uid)
-        .set({ Angels: this.state.angels }, { merge: true });
-
       this.props.navigation.navigate("Home");
     }
   };
@@ -97,53 +128,119 @@ export class AddContact extends Component {
   };
 
   render() {
+    const alignmentInteropolate = this.state.animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -height / 5]
+    });
+
+    const dynamicStyle = {
+      transform: [
+        {
+          translateY: alignmentInteropolate
+        }
+      ]
+    };
+
     return (
-      <SafeAreaView style={styles.container}>
-        <View
-          style={{ flex: 0.4, justifyContent: "center", alignItems: "center" }}
-        >
-          <Image
-            source={require("../assets/images/test.png")}
-            style={{ width: 160, height: 160 }}
-          />
-        </View>
-        {this.state.loading ? <Loading /> : null}
-        <View
-          style={{
-            flex: 0.6,
-            justifyContent: "flex-start",
-            alignItems: "center"
-          }}
-        >
-          <Text style={styles.title}>
-            Enter Angel's ID to Add To Your Angel List
-          </Text>
-          <View>
-            <TextInput
-              placeholderTextColor={colors.placeholderColor}
-              maxLength={5}
-              onChangeText={(text) => this.setState({ uid: text })}
-              placeholder="Enter User uid"
-              keyboardType="numeric"
-              style={styles.input}
-            />
+      <SafeAreaView
+        style={{ width, height, backgroundColor: colors.background }}
+      >
+        <View style={styles.container}>
+          <View
+            style={{
+              width: "100%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              zIndex: 1000
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => this.props.navigation.goBack()}
+              style={{ width: 80, flexDirection: "row", zIndex: 1000 }}
+            >
+              <View
+                style={{
+                  flex: 0.5,
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Entypo name="chevron-left" color={colors.primary} size={26} />
+              </View>
+              <View
+                style={{
+                  flex: 0.5,
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.primary,
+                    fontSize: 16,
+                    fontWeight: "bold"
+                  }}
+                >
+                  Back
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          <View style={{ flexDirection: "row", width: "100%" }}>
+          <Animated.View style={[dynamicStyle]}>
             <View
               style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center"
+                flex: 0.4,
+                justifyContent: "center",
+                alignItems: "center"
               }}
             >
-              <TouchableOpacity
-                onPress={this.handleAdd}
-                style={styles.smallButton}
-              >
-                <Text style={styles.buttonText}>+</Text>
-              </TouchableOpacity>
+              <Image
+                source={require("../assets/images/test.png")}
+                style={{ width: 160, height: 160 }}
+              />
             </View>
-          </View>
+            {this.state.loading ? <Loading /> : null}
+            <View
+              style={{
+                flex: 0.6,
+                justifyContent: "flex-start",
+                alignItems: "center"
+              }}
+            >
+              <Text style={styles.title}>
+                Enter Angel's ID to Add To Your Angel List
+              </Text>
+              <View>
+                <TextInput
+                  placeholderTextColor={colors.placeholderColor}
+                  maxLength={5}
+                  onFocus={this.AnimateScreen}
+                  onBlur={this.ReAnimateScreen}
+                  onChangeText={(text) => this.setState({ uid: text })}
+                  placeholder="Enter User uid"
+                  keyboardType="numeric"
+                  style={styles.input}
+                />
+              </View>
+              <View style={{ flexDirection: "row", width: "100%" }}>
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={this.handleAdd}
+                    style={styles.smallButton}
+                  >
+                    <Text style={styles.buttonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
         </View>
       </SafeAreaView>
     );
@@ -152,10 +249,9 @@ export class AddContact extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background
+    marginTop: 40
   },
   input: {
     borderRadius: 20,

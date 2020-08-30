@@ -10,7 +10,8 @@ import {
   Contacts,
   UsernameScreen,
   Angels,
-  AddContact
+  AddContact,
+  History
 } from "../screens";
 
 const { Navigator, Screen } = createStackNavigator();
@@ -28,6 +29,7 @@ const AppStack = () => (
     <Screen name="Home" component={Home} />
     <Screen name="contacts" component={Contacts} />
     <Screen name="AddContact" component={AddContact} />
+    <Screen name="History" component={History} />
   </Navigator>
 );
 

@@ -5,6 +5,7 @@ import Contacts from "./contacts";
 import UsernameScreen from "./username";
 import { Angels } from "./Angels";
 import { AddContact } from "./AddContact";
+import History from "./history";
 
 export {
   Welcome,
@@ -13,5 +14,6 @@ export {
   Contacts,
   UsernameScreen,
   Angels,
-  AddContact
+  AddContact,
+  History
 };

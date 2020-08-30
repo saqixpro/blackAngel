@@ -60,7 +60,7 @@ class Welcome extends Component {
               sound: "default",
               title: `Black Angel Alert`,
               body: `${
-                _angel.data().username
+                currentUser.data().username
               } is in danger! please check on them`
             })
           });

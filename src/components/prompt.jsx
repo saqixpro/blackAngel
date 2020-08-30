@@ -60,7 +60,7 @@ export const Prompt = ({ placeholder, visibility, onChangeText, onSubmit }) => {
           placeholder={placeholder || "Please Describe Your Problem"}
         />
       </View>
-      <View style={{ width: "100%", alignItems: "center", marginVertical: 20 }}>
+      <View style={{ width: "100%", alignItems: "center", paddingVertical: 20 }}>
         <TouchableOpacity style={styles.button} onPress={onSubmit}>
           <Text
             style={{ fontSize: 18, color: colors.whiteText, fontWeight: "600" }}
@@ -82,7 +82,6 @@ const styles = StyleSheet.create({
     left: width / 20,
     right: width / 20,
     width: width / 1.1,
-    height: 200,
     shadowColor: "#aaa",
     shadowOffset: {
       width: 3,
