@@ -5,17 +5,11 @@ import {
   Text,
   Dimensions,
   Alert,
-  Share,
   Animated,
   TouchableOpacity,
-  Platform
+  Platform,
 } from "react-native";
-import MapView, {
-  Marker,
-  Circle,
-  Callout,
-  CalloutSubview
-} from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { colors } from "../constants/theme";
 import { Header, Prompt, MessageBOX } from "../components";
 const { width, height } = Dimensions.get("screen");
@@ -79,7 +73,7 @@ class Home extends Component {
     loading: false,
     boxVisibility: false,
     currentAngel: null,
-    nearbyUsers: null
+    nearbyUsers: null,
   };
 
   blinkAnimation = () => {
@@ -87,7 +81,7 @@ class Home extends Component {
       Animated.timing(this.state.animation, {
         toValue: 1,
         duration: 800,
-        useNativeDriver: true
+        useNativeDriver: true,
       })
     ).start();
   };
@@ -97,7 +91,7 @@ class Home extends Component {
       Animated.timing(this.state.d_animation, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true
+        useNativeDriver: true,
       })
     ).start();
   };
@@ -121,7 +115,7 @@ class Home extends Component {
 
           if (angel)
             this.setState({
-              publicAngels: [...this.state.publicAngels, angel]
+              publicAngels: [...this.state.publicAngels, angel],
             });
         })
       : null;
@@ -140,7 +134,7 @@ class Home extends Component {
       id: Date.now(),
       timestamp: new Date().toString(),
       problem: this.state.problem,
-      user: firebase.auth().currentUser.uid
+      user: firebase.auth().currentUser.uid,
     };
 
     await History.ref.set({ history: [...history, data] }, { merge: true });
@@ -158,7 +152,7 @@ class Home extends Component {
         method: "POST",
         headers: {
           Accept: "application/json",
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           to: angel.data().token,
@@ -166,8 +160,8 @@ class Home extends Component {
           title: `${
             this.state.currentUser ? this.state.currentUser.username : "User"
           } From Black Angel`,
-          body: `${this.state.problem}`
-        })
+          body: `${this.state.problem}`,
+        }),
       });
     });
   };
@@ -225,7 +219,7 @@ class Home extends Component {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
     if (status !== "granted") {
       this.setState({
-        locationResult: `Permission to access location was denied`
+        locationResult: `Permission to access location was denied`,
       });
     } else {
       this.setState({ hasLocationPermission: true });
@@ -239,8 +233,8 @@ class Home extends Component {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
+        longitudeDelta: 0.0421,
+      },
     });
   };
 
@@ -263,8 +257,8 @@ class Home extends Component {
         {
           location: {
             latitude: this.state.mapRegion.latitude,
-            longitude: this.state.mapRegion.longitude
-          }
+            longitude: this.state.mapRegion.longitude,
+          },
         },
         { merge: true }
       );
@@ -310,7 +304,7 @@ class Home extends Component {
             method: "POST",
             headers: {
               Accept: "application/json",
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               to: user.data().token,
@@ -320,8 +314,8 @@ class Home extends Component {
                   ? this.state.currentUser.username
                   : "User"
               } From Black Angel`,
-              body: `${this.state.problem}`
-            })
+              body: `${this.state.problem}`,
+            }),
           });
         }
         this.setState({ modalVisible: false });
@@ -370,13 +364,13 @@ class Home extends Component {
         {
           text: "Yes",
           onPress: this.markSelfSafe,
-          style: "default"
+          style: "default",
         },
         {
           text: "No",
           onPress: () => console.log(`Action Cancelled`),
-          style: "cancel"
-        }
+          style: "cancel",
+        },
       ]
     );
   };
@@ -384,30 +378,30 @@ class Home extends Component {
   render() {
     const circleIntropolate = this.state.animation.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 0.8]
+      outputRange: [0, 0.8],
     });
 
     const dangerous_ColorBlink = this.state.d_animation.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 1.15]
+      outputRange: [0, 1.15],
     });
 
     const DangerousBlink = {
       opacity: this.state.d_animation,
       transform: [
         {
-          scale: dangerous_ColorBlink
-        }
-      ]
+          scale: dangerous_ColorBlink,
+        },
+      ],
     };
 
     const BlinkStyle = {
       opacity: this.state.animation,
       transform: [
         {
-          scale: circleIntropolate
-        }
-      ]
+          scale: circleIntropolate,
+        },
+      ],
     };
 
     return (
@@ -449,7 +443,7 @@ class Home extends Component {
                 <Marker
                   coordinate={{
                     longitude: angel.data().location.longitude,
-                    latitude: angel.data().location.latitude
+                    latitude: angel.data().location.latitude,
                   }}
                   title={angel.data().username}
                   description={angel.data().phoneNumber}
@@ -461,7 +455,7 @@ class Home extends Component {
                     <Animated.View
                       style={[
                         styles.userLocationMarker,
-                        angel.data().problem ? DangerousBlink : BlinkStyle
+                        angel.data().problem ? DangerousBlink : BlinkStyle,
                       ]}
                     >
                       <View style={styles.userLoactionMarkerBorder} />
@@ -471,8 +465,8 @@ class Home extends Component {
                           {
                             backgroundColor: angel.data().problem
                               ? "red"
-                              : colors.angel
-                          }
+                              : colors.angel,
+                          },
                         ]}
                       />
                     </Animated.View>
@@ -493,7 +487,7 @@ class Home extends Component {
                 <Marker
                   coordinate={{
                     longitude: user.data().location.longitude,
-                    latitude: user.data().location.latitude
+                    latitude: user.data().location.latitude,
                   }}
                   title={user.data().username}
                   description={user.data().phoneNumber}
@@ -502,7 +496,7 @@ class Home extends Component {
                     <Animated.View
                       style={[
                         styles.userLocationMarker,
-                        user.data().problem ? DangerousBlink : BlinkStyle
+                        user.data().problem ? DangerousBlink : BlinkStyle,
                       ]}
                     >
                       <View style={styles.userLoactionMarkerBorder} />
@@ -512,8 +506,8 @@ class Home extends Component {
                           {
                             backgroundColor: user.data().problem
                               ? "red"
-                              : colors.user
-                          }
+                              : colors.user,
+                          },
                         ]}
                       />
                     </Animated.View>
@@ -533,7 +527,7 @@ class Home extends Component {
             <Marker
               coordinate={{
                 latitude: this.state.mapRegion.latitude,
-                longitude: this.state.mapRegion.longitude
+                longitude: this.state.mapRegion.longitude,
               }}
               title={
                 this.state.currentUser
@@ -586,7 +580,7 @@ class Home extends Component {
             <TouchableOpacity
               onPress={this.handlePlusButton}
               style={{
-                ...styles.button
+                ...styles.button,
               }}
             >
               <FontAwesome5 name="globe" size={20} color="#fff" />
@@ -610,7 +604,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
     width,
-    height
+    height,
   },
   mapView: {
     width,
@@ -621,7 +615,7 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     right: 0,
-    zIndex: -1
+    zIndex: -1,
   },
   bottomBar: {
     position: "absolute",
@@ -636,22 +630,22 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     paddingVertical: 20,
     paddingHorizontal: 5,
-    flexDirection: "row"
+    flexDirection: "row",
   },
   buttonContainer: {
     flex: 0.33,
-    alignItems: "center"
+    alignItems: "center",
   },
   button: {
     backgroundColor: colors.background,
     padding: 10,
     paddingHorizontal: 25,
-    borderRadius: 10
+    borderRadius: 10,
   },
   buttonText: {
     color: colors.whiteText,
     fontWeight: "600",
-    fontSize: 16
+    fontSize: 16,
   },
   userLocationMarker: {
     width: 26,
@@ -660,10 +654,10 @@ const styles = StyleSheet.create({
     shadowColor: "#aaa",
     shadowOffset: {
       width: 2,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.9,
-    borderRadius: 50
+    borderRadius: 50,
   },
   userLoactionMarkerBorder: {
     backgroundColor: "#ffffff",
@@ -675,7 +669,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 50,
-    zIndex: -10
+    zIndex: -10,
   },
   userLocationMarkerCore: {
     backgroundColor: colors.primary,
@@ -687,7 +681,7 @@ const styles = StyleSheet.create({
     bottom: 2,
     height: 22,
     borderRadius: 50,
-    zIndex: 10
+    zIndex: 10,
   },
   textContainer: {
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -697,19 +691,19 @@ const styles = StyleSheet.create({
     // marginLeft: -70,
     marginVertical: 2,
     borderRadius: 10,
-    textAlign: "center"
+    textAlign: "center",
   },
   actionButton: {
     backgroundColor: "rgba(50,130,200,0.7)",
     padding: 10,
     alignItems: "center",
-    borderRadius: 10
+    borderRadius: 10,
   },
   markerContainer: {
     borderRadius: 70,
     alignItems: "center",
-    justifyContent: "center"
-  }
+    justifyContent: "center",
+  },
 });
 
 export default Home;

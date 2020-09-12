@@ -3,7 +3,7 @@ export const colors = {
   background: "#000000",
   whiteText: "#f0f0f0",
   placeholderColor: "#777",
-  secondaryBackground: "#303030",
+  secondaryBackground: "#202020",
   angel: "#63a542",
-  user: "#7b42f5"
+  user: "#7b42f5",
 };

@@ -8,17 +8,18 @@ import {
   StyleSheet,
   Alert,
   Platform,
-  Modal
+  Modal,
+  Share,
 } from "react-native";
 import {
   FlatList,
   TouchableOpacity,
-  TextInput
+  TextInput,
 } from "react-native-gesture-handler";
 import { colors } from "../constants/theme";
 import firebase from "firebase";
 import { Loading } from "../components/loading";
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import * as _contacts from "expo-contacts";
 
 import * as SMS from "expo-sms";
@@ -34,7 +35,7 @@ class Contacts extends Component {
     loading: false,
     canSendSMS: false,
     searchFilter: null,
-    angels: []
+    angels: [],
   };
 
   componentDidMount = async () => {
@@ -73,8 +74,22 @@ class Contacts extends Component {
 
     this.setState({
       contacts: [...this.state.angels],
-      loading: false
+      loading: false,
     });
+  };
+
+  handleAdd = async () => {
+    const userID = firebase.auth().currentUser.uid;
+    const user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(userID)
+      .get();
+
+    const userUID = user.data().UID ? user.data().UID : null;
+
+    if (userUID) Share.share({ url: userUID, message: `${userUID}` });
+    else Alert.alert(`User does not have a uid`);
   };
 
   sendSMSAsync = async (phone, message) => {
@@ -122,7 +137,7 @@ class Contacts extends Component {
             <View
               style={[
                 styles.searchInput,
-                { flex: 0.9, alignItems: "center", marginLeft: 20 }
+                { flex: 0.9, alignItems: "center", marginLeft: 20 },
               ]}
             >
               <View style={{ flex: 0.1 }}>
@@ -147,7 +162,7 @@ class Contacts extends Component {
               style={{
                 flex: 0.2,
                 justifyContent: "center",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               <TouchableOpacity
@@ -157,6 +172,24 @@ class Contacts extends Component {
                 <FontAwesome
                   style={{ color: colors.primary }}
                   name="plus"
+                  size={26}
+                />
+              </TouchableOpacity>
+            </View>
+            <View
+              style={{
+                flex: 0.2,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <TouchableOpacity
+                onPress={this.handleAdd}
+                style={{ backgroundColor: "transparent" }}
+              >
+                <Feather
+                  style={{ color: colors.primary }}
+                  name="share"
                   size={26}
                 />
               </TouchableOpacity>
@@ -180,13 +213,13 @@ class Contacts extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
 
   title: {
     color: colors.primary,
     fontSize: 25,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   searchInput: {
     backgroundColor: colors.secondaryBackground,
@@ -195,13 +228,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignSelf: "center",
     marginVertical: 20,
-    borderRadius: 10
+    borderRadius: 6,
   },
   input: {
     padding: 10,
     fontSize: 16,
-    color: colors.whiteText
-  }
+    color: colors.whiteText,
+  },
 });
 
 export default Contacts;

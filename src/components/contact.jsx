@@ -15,7 +15,7 @@ export const Contact = ({ id, name, phoneNumber, onPress }) => {
             color: colors.whiteText,
             paddingVertical: 5,
             fontWeight: "600",
-            fontSize: 16
+            fontSize: 16,
           }}
         >
           {"   " + name}
@@ -26,7 +26,7 @@ export const Contact = ({ id, name, phoneNumber, onPress }) => {
           style={{
             color: colors.placeholderColor,
             paddingVertical: 5,
-            fontSize: 13
+            fontSize: 13,
           }}
         >
           {phoneNumber ? phoneNumber : "No Phone Number Available"}
@@ -43,13 +43,13 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     width: width / 1.1,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 6,
     shadowColor: "#333",
     shadowOffset: {
       width: 3,
-      height: 3
+      height: 3,
     },
     shadowOpacity: 0.9,
-    alignSelf: "center"
-  }
+    alignSelf: "center",
+  },
 });

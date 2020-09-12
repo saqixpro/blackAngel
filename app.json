@@ -1,29 +1,35 @@
 {
   "expo": {
     "name": "blackAngel",
-    "slug": "blackAngel",
+    "slug": "black_angel",
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": ["ios", "android"],
     "icon": "./src/assets/images/icon.png",
     "splash": {
       "image": "./src/assets/images/test.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#00000"
+      "resizeMode": "cover"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
     "android": {
+      "package": "com.cornellius.blackangel",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "config": {
         "googleMaps": {
-          "apiKey": "to be added"
+          "apiKey": "AIzaSyDAeZKMIzxR5lGJ4aFpAOc_b-42aCnlzYA"
         }
       }
     },
     "ios": {
+      "bundleIdentifier": "com.cornellius.blackangel",
+      "config": {
+        "googleMapsApiKey": "AIzaSyCgMpqGe_2J1K7FrzTItKV2YygQJP_PO5o"
+      },
+      "buildNumber": "1.1.1",
       "supportsTablet": true
     },
     "web": {
