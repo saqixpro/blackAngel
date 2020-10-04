@@ -2,7 +2,7 @@ import React from "react";
 
 import {
   createStackNavigator,
-  TransitionPresets
+  TransitionPresets,
 } from "@react-navigation/stack";
 import {
   Welcome,
@@ -11,7 +11,7 @@ import {
   UsernameScreen,
   Angels,
   AddContact,
-  History
+  History,
 } from "../screens";
 
 const { Navigator, Screen } = createStackNavigator();
@@ -20,7 +20,7 @@ const AppStack = () => (
   <Navigator
     screenOptions={{
       headerShown: false,
-      ...TransitionPresets.RevealFromBottomAndroid
+      ...TransitionPresets.RevealFromBottomAndroid,
     }}
   >
     <Screen name="username" component={UsernameScreen} />

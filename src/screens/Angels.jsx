@@ -7,7 +7,7 @@ import {
   Dimensions,
   Alert,
   Image,
-  Animated
+  Animated,
 } from "react-native";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { colors } from "../constants/theme";
@@ -22,19 +22,19 @@ export class Angels extends Component {
     angels: [],
     uid: null,
     currentUser: null,
-    animation: new Animated.Value(0)
+    animation: new Animated.Value(0),
   };
 
   AnimateScreen = () =>
     Animated.timing(this.state.animation, {
       toValue: 1,
-      duration: 500
+      duration: 500,
     }).start();
 
   ReAnimateScreen = () =>
     Animated.timing(this.state.animation, {
       toValue: 0,
-      duration: 500
+      duration: 500,
     }).start();
 
   fetchAllUsersFromFirebase = async () => {
@@ -79,7 +79,7 @@ export class Angels extends Component {
         method: "POST",
         headers: {
           Accept: "application/json",
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           to: _usr.data().token,
@@ -87,8 +87,8 @@ export class Angels extends Component {
           title: `Black Angel`,
           body: `${
             this.state.currentUser ? this.state.currentUser.username : "Someone"
-          } has Added You as their Angel!`
-        })
+          } has Added You as their Angel!`,
+        }),
       });
 
       Alert.alert(`User Added To The List!`);
@@ -102,10 +102,9 @@ export class Angels extends Component {
         .collection("Users")
         .doc(firebase.auth().currentUser.uid)
         .set({ Angels: this.state.angels }, { merge: true });
-
-      const resetAction = StackActions.replace("Welcome");
-      this.props.navigation.dispatch(resetAction);
     }
+    const resetAction = StackActions.replace("Welcome");
+    this.props.navigation.dispatch(resetAction);
   };
 
   checkForAlreadyDone = async () => {
@@ -130,15 +129,15 @@ export class Angels extends Component {
   render() {
     const alignmentInteropolate = this.state.animation.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, -height / 5]
+      outputRange: [0, -height / 5],
     });
 
     const dynamicStyle = {
       transform: [
         {
-          translateY: alignmentInteropolate
-        }
-      ]
+          translateY: alignmentInteropolate,
+        },
+      ],
     };
 
     return (
@@ -155,7 +154,7 @@ export class Angels extends Component {
           style={{
             flex: 0.6,
             justifyContent: "flex-start",
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
           <Text style={styles.title}>
@@ -178,7 +177,7 @@ export class Angels extends Component {
               style={{
                 flex: 0.4,
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
               }}
             >
               <TouchableOpacity
@@ -192,7 +191,7 @@ export class Angels extends Component {
               style={{
                 flex: 0.6,
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
               }}
             >
               <TouchableOpacity onPress={this.handleDone} style={styles.button}>
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   input: {
     borderRadius: 20,
@@ -222,13 +221,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     color: colors.whiteText,
     textAlign: "center",
-    padding: 10
+    padding: 10,
   },
   title: {
     color: colors.whiteText,
     marginVertical: 30,
     fontSize: 18,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   button: {
     backgroundColor: colors.primary,
@@ -236,7 +235,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     width: width / 1.8,
-    marginVertical: 20
+    marginVertical: 20,
   },
   smallButton: {
     backgroundColor: colors.primary,
@@ -244,11 +243,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 50,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   buttonText: {
     color: colors.whiteText,
     fontWeight: "600",
-    fontSize: 25
-  }
+    fontSize: 25,
+  },
 });

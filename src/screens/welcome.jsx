@@ -10,22 +10,37 @@ import * as Notifications from "expo-notifications";
 import { StackActions } from "@react-navigation/native";
 import { connect } from "react-redux";
 import * as Types from "../store/types";
-
+import { Loading } from "../components/loading";
 const { width, height } = Dimensions.get("screen");
 
 class Welcome extends Component {
   state = {
-    angels: []
+    angels: [],
+    uidAssigned: false,
+    loading: false,
   };
   handlePress = () => {
     const resetAction = StackActions.replace("Home");
     this.props.navigation.dispatch(resetAction);
   };
 
+  checkCurrentUser = async () => {
+    this.setState({ loading: true });
+    const user = await firebase
+      .firestore()
+      .collection("Users")
+      .doc(firebase.auth().currentUser.uid)
+      .get();
+    if (user.data().UID)
+      await this.setState({ uidAssigned: true, loading: false });
+    else await this.assignUIDForTheUser();
+
+    this.sendNotificationToAngels();
+  };
+
   componentDidMount = async () => {
     let token = await this.registerForPushNotifications();
-    this.assignUIDForTheUser();
-    this.sendNotificationToAngels();
+    await this.checkCurrentUser();
   };
 
   sendNotificationToAngels = async (cb) => {
@@ -53,7 +68,7 @@ class Welcome extends Component {
             method: "POST",
             headers: {
               Accept: "application/json",
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               to: _angel.data().token,
@@ -61,8 +76,8 @@ class Welcome extends Component {
               title: `Black Angel Alert`,
               body: `${
                 currentUser.data().username
-              } is in danger! please check on them`
-            })
+              } is in danger! please check on them`,
+            }),
           });
         })
       : null;
@@ -86,6 +101,7 @@ class Welcome extends Component {
   };
 
   assignUIDForTheUser = async () => {
+    this.setState({ loading: true });
     const userID = await firebase.auth().currentUser.uid;
     const user = await firebase
       .firestore()
@@ -98,7 +114,10 @@ class Welcome extends Component {
 
     const validUID = await this.checkUserIDInOtherDocuments();
 
-    if (validUID) await user.ref.set({ UID }, { merge: true });
+    if (validUID)
+      await user.ref.set({ UID }, { merge: true }).then(() => {
+        this.setState({ uidAssigned: true, loading: false });
+      });
     else this.assignUIDForTheUser();
   };
 
@@ -127,13 +146,10 @@ class Welcome extends Component {
         .doc(user)
         .set(
           {
-            token: token ? token : ""
+            token: token ? token : "",
           },
           { merge: true }
-        )
-        .then((data) => {});
-
-      console.log(token);
+        );
     } else {
       alert("Must use physical device for Push Notifications");
     }
@@ -142,7 +158,7 @@ class Welcome extends Component {
         name: "default",
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C"
+        lightColor: "#FF231F7C",
       });
     }
 
@@ -152,6 +168,11 @@ class Welcome extends Component {
   render() {
     return (
       <SafeAreaView style={styles.container}>
+        {this.state.loading ? (
+          <View>
+            <Loading />
+          </View>
+        ) : null}
         <View style={styles.mainApp}>
           <View style={[styles.centerAlign, { height: height / 1.15 }]}>
             <Image
@@ -169,7 +190,7 @@ class Welcome extends Component {
 }
 
 const mapStateToProps = (state) => ({
-  user: state.user
+  user: state.user,
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -177,9 +198,9 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch({
       type: Types.loginUser,
       payload: {
-        user: user
-      }
-    })
+        user: user,
+      },
+    }),
 });
 
 const connectComponent = connect(mapStateToProps, mapDispatchToProps);
@@ -192,33 +213,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#000"
+    backgroundColor: "#000",
   },
   container: {
     backgroundColor: colors.primary,
     width,
-    height
+    height,
   },
   centerAlign: {
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   image: {
     width: 300,
-    height: 300
+    height: 300,
   },
   button: {
     backgroundColor: colors.primary,
     padding: 10,
     paddingHorizontal: 80,
     borderRadius: 20,
-    marginVertical: 50
+    marginVertical: 50,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: "600",
-    color: colors.whiteText
-  }
+    color: colors.whiteText,
+  },
 });
 
 export default connectComponent(Welcome);

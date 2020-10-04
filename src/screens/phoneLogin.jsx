@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
-  StatusBar
+  StatusBar,
 } from "react-native";
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import * as firebase from "firebase";
@@ -24,7 +24,7 @@ const firebaseConfig = {
   projectId: "blackangel-f7c41",
   storageBucket: "blackangel-f7c41.appspot.com",
   messagingSenderId: "102407084060",
-  appId: "1:102407084060:web:3a1995e9f45b45d04027d9"
+  appId: "1:102407084060:web:3a1995e9f45b45d04027d9",
 };
 
 function App(props) {
@@ -36,7 +36,7 @@ function App(props) {
     !firebaseConfig || Platform.OS === "web"
       ? {
           text:
-            "To get started, provide a valid firebase config in App.js and open this snack on an iOS or Android device."
+            "To get started, provide a valid firebase config in App.js and open this snack on an iOS or Android device.",
         }
       : undefined
   );
@@ -68,7 +68,7 @@ function App(props) {
             style={{
               marginVertical: 10,
               fontSize: 17,
-              color: colors.whiteText
+              color: colors.whiteText,
             }}
             placeholder="999 999 9999"
             placeholderTextColor={colors.placeholderColor}
@@ -125,7 +125,7 @@ function App(props) {
             style={{
               marginVertical: 10,
               fontSize: 17,
-              color: colors.whiteText
+              color: colors.whiteText,
             }}
             editable={!!verificationId}
             placeholder="123456"
@@ -158,7 +158,7 @@ function App(props) {
             <TouchableOpacity
               style={[
                 StyleSheet.absoluteFill,
-                { backgroundColor: 0xffffffee, justifyContent: "center" }
+                { backgroundColor: 0xffffffee, justifyContent: "center" },
               ]}
               onPress={() => showMessage(undefined)}
             >
@@ -167,7 +167,7 @@ function App(props) {
                   color: message.color || "blue",
                   fontSize: 17,
                   textAlign: "center",
-                  margin: 20
+                  margin: 20,
                 }}
               >
                 {message.text}
