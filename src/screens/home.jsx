@@ -190,14 +190,14 @@ class Home extends Component {
       );
     }
 
-    const nearbyUsers = users.filter((user) => {
+    const nearbyUsers =  users.docs.filter((user) => {
       const distance = DistanceCalculator.calculateDistanceBetweenTwoPoints(
         user.data().location.latitude,
         currentUser.data().location.latitude,
         user.data().location.longitude,
         currentUser.data().location.longitude,
         "M"
-      );
+      )
 
       return distance <= 20;
     });
@@ -212,7 +212,7 @@ class Home extends Component {
       .doc(firebase.auth().currentUser.uid)
       .get();
 
-    this.setState({ currentUser: user.data() });
+    this.setState({ currentUser: {id: user.id, ...user.data()} });
   };
 
   _getLocationAsync = async () => {
@@ -240,7 +240,9 @@ class Home extends Component {
 
   async componentDidMount() {
     this.setState({ loading: true });
-    await this._getLocationAsync();
+    
+    try{
+      await this._getLocationAsync();
     await this.getCurrentUser();
     await this.getPublicAngels();
 
@@ -264,6 +266,10 @@ class Home extends Component {
       );
 
     await this.fetchUsersWhoHaveProblemInTwentyMileRadius();
+    } catch (error) {
+      this.setState({loading: false})
+      alert(error.message)
+    }
 
     this.setState({ loading: false });
   }

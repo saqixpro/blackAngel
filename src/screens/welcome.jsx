@@ -51,7 +51,7 @@ class Welcome extends Component {
       .doc(firebase.auth().currentUser.uid)
       .get();
 
-    this.props.loginUser(currentUser.data());
+    this.props.loginUser({id: currentUser.id, ...currentUser.data()});
 
     currentUser.data().Angels
       ? currentUser.data().Angels.map(async (angel) => {
